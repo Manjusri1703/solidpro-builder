@@ -292,23 +292,23 @@ export function ResumeForm() {
           {/* Preview Section */}
           {showPreview && (
             <div className="hidden lg:block sticky top-24">
-              <div className="bg-muted rounded-2xl p-4 h-fit">
+              <div className="bg-muted rounded-2xl p-4 h-fit overflow-hidden">
                 <h3 className="text-sm font-medium text-muted-foreground mb-4 text-center">
                   Live Preview
                 </h3>
-                <div className="transform scale-[0.6] origin-top">
-                  <ResumePreview ref={previewRef} data={resumeData} />
+                <div className="flex justify-center">
+                  <div className="transform scale-[0.55] origin-top" style={{ width: "595px", height: "auto" }}>
+                    <ResumePreview data={resumeData} />
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Hidden full-size preview for PDF generation */}
-          {!showPreview && (
-            <div className="fixed -left-[9999px] top-0">
-              <ResumePreview ref={previewRef} data={resumeData} />
-            </div>
-          )}
+          {/* Hidden full-size preview for PDF generation - always rendered */}
+          <div className="fixed -left-[9999px] top-0" style={{ width: "595px" }}>
+            <ResumePreview ref={previewRef} data={resumeData} />
+          </div>
         </div>
       </main>
     </div>
