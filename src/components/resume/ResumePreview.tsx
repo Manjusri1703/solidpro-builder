@@ -13,8 +13,12 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
     return (
       <div
         ref={ref}
-        className="resume-document w-full bg-white shadow-elevated rounded-xl overflow-hidden"
-        style={{ minHeight: "842px" }}
+        className="resume-document bg-white shadow-elevated rounded-xl overflow-hidden"
+        style={{ 
+          width: "595px", 
+          minHeight: "842px",
+          fontFamily: "'Open Sans', sans-serif"
+        }}
       >
         {/* Header with curved design */}
         <div className="relative h-16 overflow-hidden">
@@ -35,7 +39,7 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
         </div>
 
         {/* Content */}
-        <div className="px-10 py-6 relative">
+        <div className="px-10 py-6 relative" style={{ wordWrap: "break-word", overflowWrap: "break-word" }}>
           {/* Watermark */}
           <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-[0.08] pointer-events-none">
             <svg viewBox="0 0 200 100" className="w-64 h-32">
@@ -47,45 +51,47 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
           </div>
 
           {/* Personal Info */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 font-display">
+          <div className="mb-6" style={{ maxWidth: "100%" }}>
+            <h1 className="text-2xl font-bold text-gray-900 break-words" style={{ fontFamily: "'Montserrat', sans-serif" }}>
               {personalInfo.fullName || "Your Name"}
             </h1>
-            {personalInfo.email && (
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold">Email Id:</span> {personalInfo.email}
-              </p>
-            )}
-            {education.degree && (
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold">Education:</span> {education.degree}
-                {education.institution && ` from ${education.institution}`}
-              </p>
-            )}
-            {personalInfo.phone && (
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold">Phone:</span> {personalInfo.phone}
-              </p>
-            )}
-            {personalInfo.linkedin && (
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold">LinkedIn:</span> {personalInfo.linkedin}
-              </p>
-            )}
-            {personalInfo.location && (
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold">Location:</span> {personalInfo.location}
-              </p>
-            )}
+            <div className="space-y-0.5 mt-1">
+              {personalInfo.email && (
+                <p className="text-sm text-gray-700 break-words">
+                  <span className="font-semibold">Email Id:</span> {personalInfo.email}
+                </p>
+              )}
+              {education.degree && (
+                <p className="text-sm text-gray-700 break-words">
+                  <span className="font-semibold">Education:</span> {education.degree}
+                  {education.institution && ` from ${education.institution}`}
+                </p>
+              )}
+              {personalInfo.phone && (
+                <p className="text-sm text-gray-700 break-words">
+                  <span className="font-semibold">Phone:</span> {personalInfo.phone}
+                </p>
+              )}
+              {personalInfo.linkedin && (
+                <p className="text-sm text-gray-700 break-words">
+                  <span className="font-semibold">LinkedIn:</span> {personalInfo.linkedin}
+                </p>
+              )}
+              {personalInfo.location && (
+                <p className="text-sm text-gray-700 break-words">
+                  <span className="font-semibold">Location:</span> {personalInfo.location}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Summary */}
           {summary && (
             <div className="mb-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-2 font-display tracking-wide">
+              <h2 className="text-lg font-bold text-gray-900 mb-2 tracking-wide" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 SUMMARY
               </h2>
-              <p className="text-sm text-gray-700 leading-relaxed text-justify indent-8">
+              <p className="text-sm text-gray-700 leading-relaxed text-justify break-words" style={{ textIndent: "2rem" }}>
                 {summary}
               </p>
             </div>
@@ -94,16 +100,16 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
           {/* Skills */}
           {skills.length > 0 && (
             <div className="mb-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-3 font-display tracking-wide">
+              <h2 className="text-lg font-bold text-gray-900 mb-3 tracking-wide" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 SKILLS
               </h2>
               <div className="space-y-1.5">
                 {skills.map((skill, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
-                    <div className="w-4 h-4 border border-gray-400 rounded-sm flex items-center justify-center">
+                  <div key={index} className="flex items-start gap-2 text-sm text-gray-700">
+                    <div className="w-4 h-4 border border-gray-400 rounded-sm flex items-center justify-center flex-shrink-0 mt-0.5">
                       <Check className="w-3 h-3 text-gray-600" />
                     </div>
-                    {skill}
+                    <span className="break-words">{skill}</span>
                   </div>
                 ))}
               </div>
@@ -113,21 +119,21 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
           {/* Work Experience */}
           {workExperience.length > 0 && (
             <div className="mb-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-3 font-display tracking-wide">
+              <h2 className="text-lg font-bold text-gray-900 mb-3 tracking-wide" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 WORK EXPERIENCE
               </h2>
               <div className="space-y-4">
                 {workExperience.map((exp) => (
-                  <div key={exp.id}>
-                    <h3 className="font-bold text-sm text-gray-900">
+                  <div key={exp.id} className="break-inside-avoid">
+                    <h3 className="font-bold text-sm text-gray-900 break-words">
                       {exp.companyName.toUpperCase()} — {exp.jobTitle} | {exp.startYear}–{exp.endYear}
                     </h3>
                     {exp.responsibilities.length > 0 && (
                       <ul className="mt-1 space-y-0.5">
                         {exp.responsibilities.map((resp, idx) => (
                           <li key={idx} className="text-sm text-gray-700 flex">
-                            <span className="mr-2">•</span>
-                            <span>{resp}</span>
+                            <span className="mr-2 flex-shrink-0">•</span>
+                            <span className="break-words">{resp}</span>
                           </li>
                         ))}
                       </ul>
@@ -141,19 +147,19 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
           {/* Projects */}
           {projects.length > 0 && (
             <div className="mb-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-3 font-display tracking-wide">
+              <h2 className="text-lg font-bold text-gray-900 mb-3 tracking-wide" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 PROJECTS
               </h2>
               <div className="space-y-4">
                 {projects.map((project) => (
-                  <div key={project.id}>
-                    <h3 className="font-bold text-sm text-gray-900">
+                  <div key={project.id} className="break-inside-avoid">
+                    <h3 className="font-bold text-sm text-gray-900 break-words">
                       {project.name}
                     </h3>
-                    <p className="text-sm text-gray-700 mt-1">
+                    <p className="text-sm text-gray-700 mt-1 break-words">
                       <span className="font-medium">Description:</span> {project.description}
                     </p>
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-gray-700 break-words">
                       <span className="font-medium">Tech Stack:</span> {project.technologies}
                     </p>
                   </div>
@@ -167,7 +173,7 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
         <div className="mt-auto px-10 pb-4">
           <div className="flex items-center gap-2 border-t-4 border-[#E53935] pt-4">
             <svg viewBox="0 0 150 30" className="h-8">
-              <text x="0" y="22" className="font-display font-extrabold text-2xl">
+              <text x="0" y="22" style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: "24px" }}>
                 <tspan fill="#E53935">SOLiD</tspan>
                 <tspan fill="#1565C0">PRO</tspan>
               </text>
