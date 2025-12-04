@@ -28,6 +28,8 @@ export interface Education {
   graduationYear: string;
 }
 
+export type SvgType = 'solidpro' | 'placeholder' | 'none';
+
 export interface ResumeData {
   personalInfo: PersonalInfo;
   summary: string;
@@ -35,6 +37,7 @@ export interface ResumeData {
   workExperience: WorkExperience[];
   projects: Project[];
   education: Education;
+  selectedSvg: SvgType;
 }
 
 export const initialResumeData: ResumeData = {
@@ -54,4 +57,5 @@ export const initialResumeData: ResumeData = {
     institution: '',
     graduationYear: '',
   },
+  selectedSvg: 'solidpro',
 };

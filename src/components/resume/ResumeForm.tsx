@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PersonalInfoForm } from "./PersonalInfoForm";
 import { SummaryForm } from "./SummaryForm";
@@ -10,42 +10,49 @@ import { ResumePreview } from "./ResumePreview";
 import { StepIndicator } from "./StepIndicator";
 import { ResumeData, initialResumeData } from "@/types/resume";
 import { toast } from "sonner";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import { Html2PdfOptions } from "html2pdf.js";
-
-import {
-  User,
-  FileText,
-  Wrench,
-  Briefcase,
-  FolderCode,
-  GraduationCap,
-  ArrowLeft,
-  ArrowRight,
-  Download,
-  Eye,
-  EyeOff,
-  Loader2,
-} from "lucide-react";
-import Logo from "@/components/ui/Logo";
+import { ArrowLeft, ArrowRight, Briefcase, Download, Eye, EyeOff, FileText, FolderCode, GraduationCap, Loader2, Save, User, Wrench } from "lucide-react";
 import html2pdf from "html2pdf.js";
 
 const steps = [
-  { id: 1, title: "Personal", icon: <User className="w-5 h-5" /> },
-  { id: 2, title: "Summary", icon: <FileText className="w-5 h-5" /> },
-  { id: 3, title: "Skills", icon: <Wrench className="w-5 h-5" /> },
+    { id: 1, title: "Personal", icon: <User className="w-5 h-5" /> },
+    { id: 2, title: "Summary", icon: <FileText className="w-5 h-5" /> },
+    { id: 3, title: "Skills", icon: <Wrench className="w-5 h-5" /> },
   { id: 4, title: "Experience", icon: <Briefcase className="w-5 h-5" /> },
-  { id: 5, title: "Projects", icon: <FolderCode className="w-5 h-5" /> },
-  { id: 6, title: "Education", icon: <GraduationCap className="w-5 h-5" /> },
+    { id: 5, title: "Projects", icon: <FolderCode className="w-5 h-5" /> },
+    { id: 6, title: "Education", icon: <GraduationCap className="w-5 h-5" /> },
 ];
 
 export function ResumeForm() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
+  const [resumeData, setResumeData] = useState<ResumeData>(() => {
+    // Load from localStorage on initial render
+    const saved = localStorage.getItem('resumeData');
+    return saved ? JSON.parse(saved) : initialResumeData;
+  });
   const [showPreview, setShowPreview] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
+
+  // Save to localStorage whenever resumeData changes
+  useEffect(() => {
+    localStorage.setItem('resumeData', JSON.stringify(resumeData));
+  }, [resumeData]);
+
+  const handleSaveResume = async () => {
+    setIsSaving(true);
+    try {
+      // Save to localStorage
+      localStorage.setItem('resumeData', JSON.stringify(resumeData));
+      toast.success('Resume saved successfully');
+    } catch (error) {
+      console.error('Error saving resume:', error);
+      toast.error('Failed to save resume');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -253,39 +260,45 @@ const generatePdf = async () => {
 
             {/* Navigation */}
             <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-              <Button
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={currentStep === 0}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Previous
-              </Button>
-
-              {currentStep < steps.length - 1 ? (
-                <Button variant="secondary" onClick={handleNext}>
-                  Next
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              ) : (
+              <div className="flex flex-col sm:flex-row gap-4">
                 <Button
-                  variant="gradient"
-                  onClick={generatePdf}
-                  disabled={isGenerating}
+                  variant="outline"
+                  onClick={handlePrevious}
+                  disabled={currentStep === 0}
+                  className="flex items-center gap-2"
                 >
-                  {isGenerating ? (
+                  <ArrowLeft className="w-4 h-4" />
+                  Previous
+                </Button>
+                <Button
+                  onClick={handleNext}
+                  disabled={currentStep === steps.length - 1}
+                  className="flex items-center gap-2"
+                >
+                  Next
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="flex gap-4">
+                <Button
+                  variant="outline"
+                  onClick={handleSaveResume}
+                  disabled={isSaving || isLoading}
+                  className="flex items-center gap-2"
+                >
+                  {isSaving ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generating...
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Saving...
                     </>
                   ) : (
                     <>
-                      <Download className="w-4 h-4 mr-2" />
-                      Generate Resume
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Resume
                     </>
                   )}
                 </Button>
-              )}
+              </div>
             </div>
           </div>
 
@@ -304,11 +317,11 @@ const generatePdf = async () => {
               </div>
             </div>
           )}
+        </div>
 
-          {/* Hidden full-size preview for PDF generation - always rendered */}
-          <div className="fixed -left-[9999px] top-0" style={{ width: "595px" }}>
-            <ResumePreview ref={previewRef} data={resumeData} />
-          </div>
+        {/* Hidden full-size preview for PDF generation - always rendered */}
+        <div className="fixed -left-[9999px] top-0" style={{ width: "595px" }}>
+          <ResumePreview ref={previewRef} data={resumeData} />
         </div>
       </main>
     </div>
