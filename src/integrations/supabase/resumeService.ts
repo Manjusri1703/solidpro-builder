@@ -17,6 +17,8 @@ export const getResume = async (): Promise<ResumeData | null> => {
   }
 
   if (!resumeData) return null;
+  
+  console.log('Fetched resume data:', JSON.stringify(resumeData, null, 2));
 
   return {
     personalInfo: {
