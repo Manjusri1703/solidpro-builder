@@ -7,12 +7,48 @@ export interface PdfGeneratorOptions {
   logoUrl?: string;
 }
 
-// Generate multi-page PDF with page numbers
+// Convert image URL to base64
+const loadImageAsBase64 = async (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      } else {
+        reject(new Error("Failed to get canvas context"));
+      }
+    };
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+    img.src = url;
+  });
+};
+
+// Generate multi-page PDF with watermark and logo (NO page numbers)
 export const generateResumePdf = async (options: PdfGeneratorOptions): Promise<void> => {
   const { element, filename } = options;
 
+  // Load assets
+  const logoUrl = "/solidpro.svg";
+  const watermarkUrl = "/solidpro.svg"; // Using same SVG as watermark
+
+  let logoBase64: string | null = null;
+  let watermarkBase64: string | null = null;
+
+  try {
+    logoBase64 = await loadImageAsBase64(logoUrl);
+    watermarkBase64 = await loadImageAsBase64(watermarkUrl);
+  } catch (e) {
+    console.warn("Could not load logo/watermark images:", e);
+  }
+
   const pdfOptions = {
-    margin: [15, 10, 20, 10] as [number, number, number, number],
+    margin: [20, 15, 15, 15] as [number, number, number, number], // top, right, bottom, left
     filename,
     image: { type: "jpeg" as const, quality: 0.98 },
     html2canvas: {
@@ -30,7 +66,7 @@ export const generateResumePdf = async (options: PdfGeneratorOptions): Promise<v
     pagebreak: { mode: ["avoid-all", "css", "legacy"] as const },
   };
 
-  // Generate PDF with page numbers
+  // Generate PDF
   const pdf = await html2pdf()
     .set(pdfOptions)
     .from(element)
@@ -41,14 +77,39 @@ export const generateResumePdf = async (options: PdfGeneratorOptions): Promise<v
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
 
-  // Add page numbers to each page
+  // Add logo and watermark to each page
   for (let i = 1; i <= totalPages; i++) {
     pdf.setPage(i);
-    pdf.setFontSize(9);
-    pdf.setTextColor(128, 128, 128);
-    const pageText = `Page ${i} of ${totalPages}`;
-    const textWidth = pdf.getTextWidth(pageText);
-    pdf.text(pageText, (pageWidth - textWidth) / 2, pageHeight - 8);
+
+    // Add watermark (centered, low opacity)
+    if (watermarkBase64) {
+      pdf.saveGraphicsState();
+      // @ts-ignore - setGState exists in jsPDF
+      const gState = new pdf.GState({ opacity: 0.08 });
+      pdf.setGState(gState);
+      
+      const watermarkWidth = 80;
+      const watermarkHeight = 80;
+      const watermarkX = (pageWidth - watermarkWidth) / 2;
+      const watermarkY = (pageHeight - watermarkHeight) / 2;
+      
+      pdf.addImage(
+        watermarkBase64,
+        "PNG",
+        watermarkX,
+        watermarkY,
+        watermarkWidth,
+        watermarkHeight
+      );
+      pdf.restoreGraphicsState();
+    }
+
+    // Add logo (top-left corner)
+    if (logoBase64) {
+      const logoWidth = 25;
+      const logoHeight = 10;
+      pdf.addImage(logoBase64, "PNG", 10, 5, logoWidth, logoHeight);
+    }
   }
 
   pdf.save(filename);
@@ -60,7 +121,7 @@ export const generateSimplePdf = async (
   filename: string
 ): Promise<void> => {
   const pdfOptions = {
-    margin: [10, 10, 10, 10] as [number, number, number, number],
+    margin: [15, 10, 10, 10] as [number, number, number, number],
     filename,
     image: { type: "jpeg" as const, quality: 0.98 },
     html2canvas: {
