@@ -11,7 +11,8 @@ import { StepIndicator } from "./StepIndicator";
 import { ResumeData, initialResumeData } from "@/types/resume";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Briefcase, Download, Eye, EyeOff, FileText, FolderCode, GraduationCap, Loader2, Save, User, Wrench } from "lucide-react";
-import html2pdf from "html2pdf.js";
+import { generateResumePdf } from "@/lib/pdfUtils";
+import { saveResume } from "@/integrations/supabase/resumeService";
 
 const steps = [
     { id: 1, title: "Personal", icon: <User className="w-5 h-5" /> },
@@ -45,7 +46,14 @@ export function ResumeForm() {
     try {
       // Save to localStorage
       localStorage.setItem('resumeData', JSON.stringify(resumeData));
-      toast.success('Resume saved successfully');
+      
+      // Save to Supabase
+      const success = await saveResume(resumeData);
+      if (success) {
+        toast.success('Resume saved successfully to database');
+      } else {
+        toast.error('Failed to save resume to database');
+      }
     } catch (error) {
       console.error('Error saving resume:', error);
       toast.error('Failed to save resume');
@@ -113,25 +121,12 @@ const generatePdf = async () => {
 
   try {
     const element = previewRef.current;
-
-    const opt: Html2PdfOptions = {
-      margin: [10, 10, 10, 10] as [number, number, number, number],
-      filename: `${resumeData.personalInfo.fullName}_Resume.pdf`,
-      image: { type: "jpeg", quality: 1 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-      },
-      jsPDF: {
-        unit: "mm",
-        format: "a4",
-        orientation: "portrait",
-      },
-    };
-
-    await html2pdf().set(opt).from(element).save();
+    const filename = `${resumeData.personalInfo.fullName || 'Resume'}_Resume.pdf`;
+    
+    await generateResumePdf({
+      element,
+      filename,
+    });
 
     toast.success("PDF generated successfully!");
   } catch (err) {
