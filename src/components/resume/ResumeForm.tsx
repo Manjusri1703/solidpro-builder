@@ -12,6 +12,8 @@ import { ResumeData, initialResumeData } from "@/types/resume";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { Html2PdfOptions } from "html2pdf.js";
+
 import {
   User,
   FileText,
@@ -26,6 +28,8 @@ import {
   EyeOff,
   Loader2,
 } from "lucide-react";
+import Logo from "@/components/ui/Logo";
+import html2pdf from "html2pdf.js";
 
 const steps = [
   { id: 1, title: "Personal", icon: <User className="w-5 h-5" /> },
@@ -91,50 +95,46 @@ export function ResumeForm() {
     return true;
   };
 
-  const generatePDF = async () => {
-    if (!validateForm()) return;
-    if (!previewRef.current) return;
+const generatePdf = async () => {
+  if (!previewRef.current) {
+    toast.error("Preview is not ready.");
+    return;
+  }
 
-    setIsGenerating(true);
-    toast.loading("Generating your resume...");
+  setIsGenerating(true);
+  const loadingToast = toast.loading("Generating PDF...");
 
-    try {
-      const canvas = await html2canvas(previewRef.current, {
+  try {
+    const element = previewRef.current;
+
+    const opt: Html2PdfOptions = {
+      margin: [10, 10, 10, 10] as [number, number, number, number],
+      filename: `${resumeData.personalInfo.fullName}_Resume.pdf`,
+      image: { type: "jpeg", quality: 1 },
+      html2canvas: {
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         logging: false,
-        backgroundColor: "#ffffff",
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
+      },
+      jsPDF: {
         unit: "mm",
         format: "a4",
-      });
+        orientation: "portrait",
+      },
+    };
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 0;
+    await html2pdf().set(opt).from(element).save();
 
-      pdf.addImage(imgData, "PNG", imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      pdf.save(`${resumeData.personalInfo.fullName.replace(/\s+/g, "_")}_Resume.pdf`);
-
-      toast.dismiss();
-      toast.success("Resume generated successfully!");
-    } catch (error) {
-      toast.dismiss();
-      toast.error("Failed to generate PDF. Please try again.");
-      console.error("PDF generation error:", error);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
+    toast.success("PDF generated successfully!");
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to generate PDF.");
+  } finally {
+    toast.dismiss(loadingToast);
+    setIsGenerating(false);
+  }
+};
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 0:
@@ -219,7 +219,7 @@ export function ResumeForm() {
               <Button
                 variant="gradient"
                 size="lg"
-                onClick={generatePDF}
+                onClick={generatePdf}
                 disabled={isGenerating}
               >
                 {isGenerating ? (
@@ -270,7 +270,7 @@ export function ResumeForm() {
               ) : (
                 <Button
                   variant="gradient"
-                  onClick={generatePDF}
+                  onClick={generatePdf}
                   disabled={isGenerating}
                 >
                   {isGenerating ? (

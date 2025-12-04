@@ -20,18 +20,24 @@ export function ProjectsForm({ projects, onChange }: ProjectsFormProps) {
       id: Date.now().toString(),
       name: "",
       description: "",
-      technologies: "",
+      technologies: [],
     };
-    onChange([...projects, newProject]);
+    const updatedProjects = [...projects, newProject];
+    onChange(updatedProjects);
     setExpandedIds([...expandedIds, newProject.id]);
   };
 
-  const updateProject = (id: string, field: keyof Project, value: string) => {
+  const updateProject = (id: string, field: keyof Project, value: string | string[]) => {
     onChange(
       projects.map((proj) =>
         proj.id === id ? { ...proj, [field]: value } : proj
       )
     );
+  };
+
+  const updateTechnologies = (id: string, techString: string) => {
+    const technologies = techString.split(',').map(tech => tech.trim()).filter(tech => tech.length > 0);
+    updateProject(id, 'technologies', technologies);
   };
 
   const removeProject = (id: string) => {
@@ -71,7 +77,7 @@ export function ProjectsForm({ projects, onChange }: ProjectsFormProps) {
                     {project.name || `Project ${index + 1}`}
                   </h4>
                   <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-                    {project.technologies || "Technologies used"}
+                    {project.technologies ? project.technologies.join(', ') : "Technologies used"}
                   </p>
                 </div>
               </div>
@@ -119,11 +125,11 @@ export function ProjectsForm({ projects, onChange }: ProjectsFormProps) {
                 </FormField>
                 <FormField label="Technologies Used" required>
                   <Input
-                    placeholder="React, Node.js, PostgreSQL, AWS"
-                    value={project.technologies}
-                    onChange={(e) =>
-                      updateProject(project.id, "technologies", e.target.value)
-                    }
+                    id={`technologies-${project.id}`}
+                    placeholder="e.g., React, Node.js, MongoDB (comma separated)"
+                    value={project.technologies.join(', ')}
+                    onChange={(e) => updateTechnologies(project.id, e.target.value)}
+                    className="bg-background"
                   />
                 </FormField>
               </div>

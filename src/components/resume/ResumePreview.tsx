@@ -13,47 +13,35 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
     return (
       <div
         ref={ref}
-        className="resume-document bg-white shadow-elevated rounded-xl overflow-hidden"
+        className="resume-document bg-white shadow-elevated rounded-xl overflow-hidden relative"
         style={{ 
           width: "595px", 
           minHeight: "842px",
           fontFamily: "'Open Sans', sans-serif"
         }}
       >
-        {/* Header with curved design */}
-        <div className="relative h-16 overflow-hidden">
-          <svg
-            viewBox="0 0 595 60"
-            className="absolute inset-0 w-full h-full"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M0,0 L595,0 L595,30 Q500,60 350,45 Q200,30 100,50 Q50,60 0,50 Z"
-              fill="#E53935"
-            />
-            <path
-              d="M595,0 L595,25 Q550,40 500,35 Q450,30 400,40 L400,0 Z"
-              fill="#1565C0"
-            />
-          </svg>
+        {/* Watermark - Centered on page */}
+        <div className="absolute inset-0 flex items-center justify-center z-0">
+          <img 
+            src="/solidpro.svg" 
+            alt="SOLiDPRO Watermark" 
+            className="w-[200px] object-contain opacity-5"
+          />
         </div>
-
         {/* Content */}
-        <div className="px-10 py-6 relative" style={{ wordWrap: "break-word", overflowWrap: "break-word" }}>
-          {/* Watermark */}
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-[0.08] pointer-events-none">
-            <svg viewBox="0 0 200 100" className="w-64 h-32">
-              <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" 
-                    className="fill-gray-400 font-display font-bold text-3xl tracking-wider">
-                SOLiDPRO
-              </text>
+        <div className="px-10 pt-2 pb-6 relative" style={{ wordWrap: "break-word", overflowWrap: "break-word" }}>
+          {/* Header with curved design */}
+          <div className="relative z-10 -ml-10 -mt-5">
+            <svg width="227" height="183" viewBox="0 0 227 183" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M167.459 0H0V141.347C6.2389 41.2263 114.168 4.67516 167.459 0Z" fill="#16469D"></path>
+              <path d="M227 0C58.8136 7.81475 6.44886 124.095 0 181.259V157.38V132.417C18.0568 33.6469 113.5 3.25615 159.932 0H227Z" fill="#ED1B2F"></path>
             </svg>
           </div>
 
           {/* Personal Info */}
           <div className="mb-6" style={{ maxWidth: "100%" }}>
             <h1 className="text-2xl font-bold text-gray-900 break-words" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-              {personalInfo.fullName || "Your Name"}
+              {personalInfo.fullName || ""}
             </h1>
             <div className="space-y-0.5 mt-1">
               {personalInfo.email && (
@@ -117,33 +105,47 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
           )}
 
           {/* Work Experience */}
-          {workExperience.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-3 tracking-wide" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                WORK EXPERIENCE
-              </h2>
-              <div className="space-y-4">
-                {workExperience.map((exp) => (
-                  <div key={exp.id} className="break-inside-avoid">
-                    <h3 className="font-bold text-sm text-gray-900 break-words">
-                      {exp.companyName.toUpperCase()} — {exp.jobTitle} | {exp.startYear}–{exp.endYear}
-                    </h3>
-                    {exp.responsibilities.length > 0 && (
-                      <ul className="mt-1 space-y-0.5">
-                        {exp.responsibilities.map((resp, idx) => (
-                          <li key={idx} className="text-sm text-gray-700 flex">
-                            <span className="mr-2 flex-shrink-0">•</span>
-                            <span className="break-words">{resp}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+         {workExperience.length > 0 && (
+  <div className="mb-6 break-inside-avoid">
+    <h2 className="text-lg font-bold text-gray-900 mb-3 tracking-wide" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+      WORK EXPERIENCE
+    </h2>
+    <div className="space-y-4">
+      {workExperience.map((exp) => (
+        <div key={exp.id} className="break-inside-avoid-page">
+          <h3 className="font-bold text-sm text-gray-900 break-words">
+            {exp.companyName.toUpperCase()} — {exp.jobTitle} | {exp.startYear}–{exp.endYear}
+          </h3>
+          {exp.responsibilities.length > 0 && (
+            <ul className="mt-1 space-y-1">
+              {exp.responsibilities
+                .filter(resp => resp.trim() !== '') // Filter out empty responsibilities
+                .map((resp, idx) => (
+                  <li key={idx} className="text-sm text-gray-700 flex break-inside-avoid">
+                    <span className="mr-2 flex-shrink-0">•</span>
+                    <span className="break-words">{resp}</span>
+                  </li>
+                ))
+              }
+            </ul>
           )}
-
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+<style>
+  {`
+    @media print {
+      .break-inside-avoid {
+        break-inside: avoid;
+      }
+      .break-inside-avoid-page {
+        break-inside: avoid-page;
+      }
+    }
+  `}
+</style>
           {/* Projects */}
           {projects.length > 0 && (
             <div className="mb-6">
@@ -167,18 +169,6 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
               </div>
             </div>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="mt-auto px-10 pb-4">
-          <div className="flex items-center gap-2 border-t-4 border-[#E53935] pt-4">
-            <svg viewBox="0 0 150 30" className="h-8">
-              <text x="0" y="22" style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: "24px" }}>
-                <tspan fill="#E53935">SOLiD</tspan>
-                <tspan fill="#1565C0">PRO</tspan>
-              </text>
-            </svg>
-          </div>
         </div>
       </div>
     );
