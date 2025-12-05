@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Json } from './types';
 
 // Get the most recent resume
+// Get the most recent resume
 export const getResume = async (): Promise<ResumeData | null> => {
   const { data: resumeData, error } = await supabase
     .from('resumes')
@@ -17,8 +18,6 @@ export const getResume = async (): Promise<ResumeData | null> => {
   }
 
   if (!resumeData) return null;
-  
-  console.log('Fetched resume data:', JSON.stringify(resumeData, null, 2));
 
   return {
     personalInfo: {
@@ -30,7 +29,19 @@ export const getResume = async (): Promise<ResumeData | null> => {
     },
     summary: resumeData.summary || '',
     skills: resumeData.skills || [],
-    workExperience: (resumeData.work_experience as unknown as WorkExperience[]) || [],
+    workExperience: (() => {
+      if (!Array.isArray(resumeData.work_experience)) return [];
+      return resumeData.work_experience.map((exp: any) => ({
+        id: exp?.id || '',
+        companyName: exp?.companyName || '',
+        jobTitle: exp?.jobTitle || '',
+        startYear: exp?.startYear || '',
+        endYear: exp?.endYear || '',
+        responsibilities: Array.isArray(exp?.responsibilities) 
+          ? exp.responsibilities.filter((r: any): r is string => typeof r === 'string')
+          : []
+      } as WorkExperience));
+    })(),
     projects: (resumeData.projects as unknown as Project[]) || [],
     education: (resumeData.education as unknown as Education) || { degree: '', institution: '', graduationYear: '' },
     selectedSvg: 'solidpro',
@@ -38,9 +49,10 @@ export const getResume = async (): Promise<ResumeData | null> => {
 };
 
 // Save resume to Supabase
+// Save resume to Supabase
 export const saveResume = async (resumeData: ResumeData): Promise<boolean> => {
   console.log('Starting saveResume with data:', JSON.stringify(resumeData, null, 2));
-  
+    try {
   const resumePayload = {
     full_name: resumeData.personalInfo.fullName,
     email: resumeData.personalInfo.email,
@@ -49,7 +61,7 @@ export const saveResume = async (resumeData: ResumeData): Promise<boolean> => {
     location: resumeData.personalInfo.location || null,
     summary: resumeData.summary,
     skills: resumeData.skills,
-    work_experience: resumeData.workExperience as unknown as Json,
+    work_experiences: resumeData.workExperience as unknown as Json,
     projects: resumeData.projects as unknown as Json,
     education: resumeData.education as unknown as Json,
   };
@@ -72,7 +84,11 @@ export const saveResume = async (resumeData: ResumeData): Promise<boolean> => {
   }
   
   console.log('Successfully saved resume:', data);
-  return true;
+    return true;
+  } catch (error) {
+    console.error('Unexpected error in saveResume:', error);
+    return false;
+  }
 };
 
 // Subscribe to resume changes

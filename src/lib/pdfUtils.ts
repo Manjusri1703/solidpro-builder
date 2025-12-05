@@ -1,5 +1,26 @@
 import html2pdf from "html2pdf.js";
 
+// Type for html2pdf options with onclone callback
+interface Html2PdfOptions {
+  margin?: [number, number, number, number];
+  filename?: string;
+  image?: { type: string; quality: number };
+  html2canvas?: { 
+    scale?: number; 
+    useCORS?: boolean; 
+    logging?: boolean; 
+    letterRendering?: boolean;
+    allowTaint?: boolean;
+  };
+  jsPDF?: { unit: string; format: string; orientation: string };
+  pagebreak?: {
+    mode?: string[];
+    before?: string;
+    after?: string;
+  };
+  onclone?: (document: Document) => void;
+}
+
 export interface PdfGeneratorOptions {
   element: HTMLElement;
   filename: string;
@@ -29,92 +50,108 @@ const loadImageAsBase64 = async (url: string): Promise<string> => {
   });
 };
 
-// Generate multi-page PDF with watermark and logo (NO page numbers)
+// ... (keep the existing imports and interfaces at the top of the file)
+
 export const generateResumePdf = async (options: PdfGeneratorOptions): Promise<void> => {
   const { element, filename } = options;
 
-  // Load assets
-  const logoUrl = "/solidpro.svg";
-  const watermarkUrl = "/solidpro.svg"; // Using same SVG as watermark
-
-  let logoBase64: string | null = null;
+  // Load watermark
+  const watermarkUrl = "/solidpro.svg";
   let watermarkBase64: string | null = null;
 
   try {
-    logoBase64 = await loadImageAsBase64(logoUrl);
     watermarkBase64 = await loadImageAsBase64(watermarkUrl);
   } catch (e) {
-    console.warn("Could not load logo/watermark images:", e);
+    console.warn("Could not load watermark image:", e);
   }
 
-  const pdfOptions = {
-    margin: [20, 15, 15, 15] as [number, number, number, number], // top, right, bottom, left
-    filename,
-    image: { type: "jpeg" as const, quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
-      letterRendering: true,
-    },
-    jsPDF: {
-      unit: "mm" as const,
-      format: "a4" as const,
-      orientation: "portrait" as const,
-    },
-    pagebreak: { mode: ["avoid-all", "css", "legacy"] as const },
-  };
+  // Create a clone of the element to avoid modifying the original
+  const elementClone = element.cloneNode(true) as HTMLElement;
+  document.body.appendChild(elementClone);
 
-  // Generate PDF
-  const pdf = await html2pdf()
-    .set(pdfOptions)
-    .from(element)
-    .toPdf()
-    .get("pdf");
+  try {
+    // We'll handle the watermark in the onclone callback to ensure it appears on all pages
 
-  const totalPages = pdf.internal.getNumberOfPages();
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-
-  // Add logo and watermark to each page
-  for (let i = 1; i <= totalPages; i++) {
-    pdf.setPage(i);
-
-    // Add watermark (centered, low opacity)
-    if (watermarkBase64) {
-      pdf.saveGraphicsState();
-      // @ts-ignore - setGState exists in jsPDF
-      const gState = new pdf.GState({ opacity: 0.08 });
-      pdf.setGState(gState);
-      
-      const watermarkWidth = 80;
-      const watermarkHeight = 80;
-      const watermarkX = (pageWidth - watermarkWidth) / 2;
-      const watermarkY = (pageHeight - watermarkHeight) / 2;
-      
-      pdf.addImage(
-        watermarkBase64,
-        "PNG",
-        watermarkX,
-        watermarkY,
-        watermarkWidth,
-        watermarkHeight
-      );
-      pdf.restoreGraphicsState();
-    }
-
-    // Add logo (top-left corner)
-    if (logoBase64) {
-      const logoWidth = 25;
-      const logoHeight = 10;
-      pdf.addImage(logoBase64, "PNG", 10, 5, logoWidth, logoHeight);
+    // Generate and save the PDF
+    const pdfOptions: Omit<Html2PdfOptions, 'onclone'> = {
+  margin: [15, 10, 15, 10],
+  filename: filename.endsWith('.pdf') ? filename : `${filename}.pdf`,
+  image: { type: 'jpeg', quality: 0.98 },
+  html2canvas: { 
+    scale: 2, 
+    useCORS: true,
+    logging: true,
+    letterRendering: true
+  },
+  jsPDF: { 
+    unit: 'mm', 
+    format: 'a4', 
+    orientation: 'portrait' 
+  },
+  pagebreak: { 
+    mode: ['avoid-all', 'css', 'legacy'],
+    before: '.page-break-before',
+    after: '.page-break-after'
+  }
+};
+    const options: Html2PdfOptions = {
+      ...pdfOptions,
+      // In the onclone callback of html2pdf
+onclone: (document: Document) => {
+  // Ensure the watermark is on all pages
+  if (watermarkBase64) {
+    const style = document.createElement('style');
+    style.textContent = `
+      .watermark {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url(${watermarkBase64});
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 40% auto;
+        opacity: 0.05;
+        pointer-events: none;
+        z-index: -1;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    const watermarks = document.querySelectorAll('.watermark');
+    if (watermarks.length === 0) {
+      const watermark = document.createElement('div');
+      watermark.className = 'watermark';
+      document.body.insertBefore(watermark, document.body.firstChild);
     }
   }
 
-  pdf.save(filename);
+  // Ensure the SVG header is visible
+  const svgs = document.querySelectorAll('svg');
+  svgs.forEach(svg => {
+    svg.style.position = 'relative';
+    svg.style.zIndex = '10';
+  });
+}}
+    
+    await html2pdf()
+      .set(options as any)
+      .from(elementClone)
+      .save(filename);
+
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    throw error;
+  } finally {
+    // Clean up
+    if (elementClone.parentNode) {
+      elementClone.parentNode.removeChild(elementClone);
+    }
+  }
 };
 
+// ... (keep the rest of the file as is)
 // Simple PDF generation without extra features (fallback)
 export const generateSimplePdf = async (
   element: HTMLElement,
