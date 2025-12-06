@@ -5,10 +5,10 @@ interface Html2PdfOptions {
   margin?: [number, number, number, number];
   filename?: string;
   image?: { type: string; quality: number };
-  html2canvas?: { 
-    scale?: number; 
-    useCORS?: boolean; 
-    logging?: boolean; 
+  html2canvas?: {
+    scale?: number;
+    useCORS?: boolean;
+    logging?: boolean;
     letterRendering?: boolean;
     allowTaint?: boolean;
   };
@@ -74,34 +74,34 @@ export const generateResumePdf = async (options: PdfGeneratorOptions): Promise<v
 
     // Generate and save the PDF
     const pdfOptions: Omit<Html2PdfOptions, 'onclone'> = {
-  margin: [15, 10, 15, 10],
-  filename: filename.endsWith('.pdf') ? filename : `${filename}.pdf`,
-  image: { type: 'jpeg', quality: 0.98 },
-  html2canvas: { 
-    scale: 2, 
-    useCORS: true,
-    logging: true,
-    letterRendering: true
-  },
-  jsPDF: { 
-    unit: 'mm', 
-    format: 'a4', 
-    orientation: 'portrait' 
-  },
-  pagebreak: { 
-    mode: ['avoid-all', 'css', 'legacy'],
-    before: '.page-break-before',
-    after: '.page-break-after'
-  }
-};
+      margin: [5, 10, 10, 10],
+      filename: filename.endsWith('.pdf') ? filename : `${filename}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        letterRendering: true
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait'
+      },
+      pagebreak: {
+        mode: ['avoid-all', 'css', 'legacy'],
+        before: '.page-break-before',
+        after: '.page-break-after'
+      }
+    };
     const options: Html2PdfOptions = {
       ...pdfOptions,
       // In the onclone callback of html2pdf
-onclone: (document: Document) => {
-  // Ensure the watermark is on all pages
-  if (watermarkBase64) {
-    const style = document.createElement('style');
-    style.textContent = `
+      onclone: (document: Document) => {
+        // Ensure the watermark is on all pages
+        if (watermarkBase64) {
+          const style = document.createElement('style');
+          style.textContent = `
       .watermark {
         position: fixed;
         top: 0;
@@ -117,24 +117,25 @@ onclone: (document: Document) => {
         z-index: -1;
       }
     `;
-    document.head.appendChild(style);
-    
-    const watermarks = document.querySelectorAll('.watermark');
-    if (watermarks.length === 0) {
-      const watermark = document.createElement('div');
-      watermark.className = 'watermark';
-      document.body.insertBefore(watermark, document.body.firstChild);
-    }
-  }
+          document.head.appendChild(style);
 
-  // Ensure the SVG header is visible
-  const svgs = document.querySelectorAll('svg');
-  svgs.forEach(svg => {
-    svg.style.position = 'relative';
-    svg.style.zIndex = '10';
-  });
-}}
-    
+          const watermarks = document.querySelectorAll('.watermark');
+          if (watermarks.length === 0) {
+            const watermark = document.createElement('div');
+            watermark.className = 'watermark';
+            document.body.insertBefore(watermark, document.body.firstChild);
+          }
+        }
+
+        // Ensure the SVG header is visible
+        const svgs = document.querySelectorAll('svg');
+        svgs.forEach(svg => {
+          svg.style.position = 'relative';
+          svg.style.zIndex = '10';
+        });
+      }
+    }
+
     await html2pdf()
       .set(options as any)
       .from(elementClone)
@@ -158,7 +159,7 @@ export const generateSimplePdf = async (
   filename: string
 ): Promise<void> => {
   const pdfOptions = {
-    margin: [15, 10, 10, 10] as [number, number, number, number],
+    margin: [5, 10, 10, 10] as [number, number, number, number],
     filename,
     image: { type: "jpeg" as const, quality: 0.98 },
     html2canvas: {

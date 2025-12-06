@@ -1,97 +1,169 @@
-import type { ResumeData, WorkExperience, Project, Education } from '@/types/resume';
+import type { ResumeData } from '@/types/resume';
+import type { DbResumeRow } from '@/types/database';
 import { supabase } from '@/integrations/supabase/client';
+import { dbToResume, resumeToDb } from '@/lib/resumeMapper';
 import type { Json } from './types';
 
-// Get the most recent resume
-// Get the most recent resume
+/**
+ * Get the most recent resume from Supabase
+ * DB (snake_case) → Frontend (camelCase)
+ */
 export const getResume = async (): Promise<ResumeData | null> => {
-  const { data: resumeData, error } = await supabase
-    .from('resumes')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
+  console.log('Fetching resume from database...');
 
-  if (error) {
-    console.error('Error fetching resume:', error);
+  try {
+    const { data, error, status } = await supabase
+      .from('resumes')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    console.log('Supabase response:', { status, error, hasData: !!data });
+
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows returned
+        console.log('No resume found in the database');
+        return null;
+      }
+      console.error('Error fetching resume:', error);
+      return null;
+    }
+
+    if (!data) {
+      console.log('No resume data found');
+      return null;
+    }
+
+    console.log('Raw data from database:', data);
+
+    // Supabase returns JSONB as parsed objects, not strings
+    const dbRow = data as unknown as DbResumeRow;
+    console.log('Fetched resume (DB format):', JSON.stringify(dbRow, null, 2));
+
+    const resume = dbToResume(dbRow);
+    console.log('Transformed resume (Frontend format):', JSON.stringify(resume, null, 2));
+
+    return resume;
+  } catch (error) {
+    console.error('Unexpected error in getResume:', error);
     return null;
   }
-
-  if (!resumeData) return null;
-
-  return {
-    personalInfo: {
-      fullName: resumeData.full_name,
-      email: resumeData.email,
-      phone: resumeData.phone || '',
-      linkedin: resumeData.linkedin || '',
-      location: resumeData.location || '',
-    },
-    summary: resumeData.summary || '',
-    skills: resumeData.skills || [],
-    workExperience: (() => {
-      if (!Array.isArray(resumeData.work_experience)) return [];
-      return resumeData.work_experience.map((exp: any) => ({
-        id: exp?.id || '',
-        companyName: exp?.companyName || '',
-        jobTitle: exp?.jobTitle || '',
-        startYear: exp?.startYear || '',
-        endYear: exp?.endYear || '',
-        responsibilities: Array.isArray(exp?.responsibilities) 
-          ? exp.responsibilities.filter((r: any): r is string => typeof r === 'string')
-          : []
-      } as WorkExperience));
-    })(),
-    projects: (resumeData.projects as unknown as Project[]) || [],
-    education: (resumeData.education as unknown as Education) || { degree: '', institution: '', graduationYear: '' },
-    selectedSvg: 'solidpro',
-  };
 };
 
-// Save resume to Supabase
-// Save resume to Supabase
+/**
+ * Save resume to Supabase
+ * Frontend (camelCase) → DB (snake_case)
+ */
+// In resumeService.ts, update the saveResume function
+// In resumeService.ts, update the saveResume function
 export const saveResume = async (resumeData: ResumeData): Promise<boolean> => {
-  console.log('Starting saveResume with data:', JSON.stringify(resumeData, null, 2));
-    try {
-  const resumePayload = {
-    full_name: resumeData.personalInfo.fullName,
-    email: resumeData.personalInfo.email,
-    phone: resumeData.personalInfo.phone || null,
-    linkedin: resumeData.personalInfo.linkedin || null,
-    location: resumeData.personalInfo.location || null,
-    summary: resumeData.summary,
-    skills: resumeData.skills,
-    work_experiences: resumeData.workExperience as unknown as Json,
-    projects: resumeData.projects as unknown as Json,
-    education: resumeData.education as unknown as Json,
-  };
-  
-  console.log('Prepared resume payload:', JSON.stringify(resumePayload, null, 2));
+  console.log('Saving resume (Frontend format):', JSON.stringify(resumeData, null, 2));
 
-  const { data, error } = await supabase
-    .from('resumes')
-    .insert([resumePayload])
-    .select();
+  // Use the resumeToDb function to transform the data
+  const dbPayload = resumeToDb(resumeData);
+  console.log('Prepared payload (DB format):', JSON.stringify(dbPayload, null, 2));
 
-  if (error) {
-    console.error('Error saving resume:', {
-      error,
-      details: error.details,
-      hint: error.hint,
-      code: error.code
-    });
-    return false;
-  }
-  
-  console.log('Successfully saved resume:', data);
+  try {
+    const { data, error } = await supabase
+      .from('resumes')
+      .insert(dbPayload)  // Remove the array brackets
+      .select();
+
+    if (error) {
+      console.error('Error saving resume:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
+      return false;
+    }
+
+    console.log('Successfully saved resume:', data);
     return true;
   } catch (error) {
-    console.error('Unexpected error in saveResume:', error);
+    console.error('Unexpected error saving resume:', error);
     return false;
   }
 };
 
 // Subscribe to resume changes
+/**
+ * List all resumes in the database (for debugging purposes)
+ */
+export const listAllResumes = async () => {
+  console.log('=== FETCHING ALL RESUMES FROM SUPABASE DATABASE ===');
+
+  try {
+    const { data, error } = await supabase
+      .from('resumes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching resumes:', error);
+      return [];
+    }
+
+    console.log(`\n📊 TOTAL RESUMES FOUND: ${data.length}`);
+    console.log('='.repeat(80));
+
+    // Print summary table
+    console.log('\n📋 RESUME SUMMARY TABLE:');
+    console.table(data.map((resume, index) => ({
+      '#': index + 1,
+      'ID': resume.id.substring(0, 8) + '...',
+      'Name': resume.full_name || '(empty)',
+      'Email': resume.email || '(empty)',
+      'Phone': resume.phone || '(empty)',
+      'Created': new Date(resume.created_at).toLocaleString(),
+      'Has Skills': resume.skills ? 'Yes' : 'No',
+      'Has Experience': resume.work_experience ? 'Yes' : 'No',
+      'Has Projects': resume.projects ? 'Yes' : 'No',
+      'Has Education': resume.education ? 'Yes' : 'No',
+    })));
+
+    // Print detailed information for each resume
+    console.log('\n📝 DETAILED RESUME DATA:');
+    console.log('='.repeat(80));
+    data.forEach((resume, index) => {
+      console.log(`\n--- RESUME #${index + 1} ---`);
+      console.log(`ID: ${resume.id}`);
+      console.log(`Created: ${new Date(resume.created_at).toLocaleString()}`);
+      console.log(`Updated: ${new Date(resume.updated_at).toLocaleString()}`);
+      console.log(`\nPersonal Info:`);
+      console.log(`  - Full Name: ${resume.full_name || '(empty)'}`);
+      console.log(`  - Email: ${resume.email || '(empty)'}`);
+      console.log(`  - Phone: ${resume.phone || '(empty)'}`);
+      console.log(`  - LinkedIn: ${resume.linkedin || '(empty)'}`);
+      console.log(`  - Location: ${resume.location || '(empty)'}`);
+      console.log(`\nContent:`);
+      console.log(`  - Summary: ${resume.summary ? resume.summary.substring(0, 100) + '...' : '(empty)'}`);
+      console.log(`  - Skills: ${resume.skills ? resume.skills.length + ' skills' : 'None'}`);
+      console.log(`  - Work Experience: ${resume.work_experience ? JSON.parse(JSON.stringify(resume.work_experience)).length + ' entries' : 'None'}`);
+      console.log(`  - Projects: ${resume.projects ? JSON.parse(JSON.stringify(resume.projects)).length + ' entries' : 'None'}`);
+      console.log(`  - Education: ${resume.education ? 'Yes' : 'No'}`);
+      if (resume.education) {
+        const edu = resume.education as any;
+        console.log(`    Degree: ${edu.degree || '(empty)'}`);
+        console.log(`    Institution: ${edu.institution || '(empty)'}`);
+        console.log(`    Year: ${edu.graduationYear || '(empty)'}`);
+      }
+    });
+
+    console.log('\n' + '='.repeat(80));
+    console.log('📦 FULL JSON DATA (for debugging):');
+    console.log(JSON.stringify(data, null, 2));
+    console.log('='.repeat(80));
+
+    return data;
+  } catch (error) {
+    console.error('❌ Unexpected error listing resumes:', error);
+    return [];
+  }
+};
+
 export const subscribeToResumeChanges = (
   callback: (resume: ResumeData | null) => void
 ) => {
