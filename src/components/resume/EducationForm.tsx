@@ -50,8 +50,14 @@ export function EducationForm({ data, onChange }: EducationFormProps) {
             <Input
               placeholder="2023"
               value={data.graduationYear}
-              onChange={(e) => handleChange("graduationYear", e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "" || (/^\d+$/.test(value) && value.length <= 4)) {
+                  handleChange("graduationYear", value);
+                }
+              }}
               className="pl-10"
+              maxLength={4}
             />
           </div>
         </FormField>

@@ -108,7 +108,7 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
         {/* Content */}
         <div className="px-10 pt-2 pb-6 relative" style={{ wordWrap: "break-word", overflowWrap: "break-word", zIndex: 2 }}>
           {/* Personal Info */}
-          <div className="mb-6" style={{ maxWidth: "100%", paddingTop: "40px" }}>
+          <div className="mb-4" style={{ maxWidth: "100%", paddingTop: "40px" }}>
             <h1 className="text-2xl font-bold text-gray-900 break-words" style={{ fontFamily: "'Montserrat', sans-serif" }}>
               {personalInfo.fullName || ""}
             </h1>
@@ -144,7 +144,7 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
 
           {/* Summary */}
           {summary && (
-            <div className="mb-6">
+            <div className="mb-4">
               <h2 className="text-lg font-bold text-gray-900 mb-2 tracking-wide" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 SUMMARY
               </h2>
@@ -156,24 +156,24 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
 
           {/* Skills */}
           {skills.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-4">
               <h2 className="text-lg font-bold text-gray-900 mb-3 tracking-wide" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 SKILLS
               </h2>
-              <div className="space-y-1.5">
+              <ul className="space-y-1.5 list-none">
                 {skills.map((skill, index) => (
-                  <div key={index} className="text-sm text-gray-700 flex break-inside-avoid">
+                  <li key={index} className="text-sm text-gray-700 flex break-inside-avoid">
                     <span className="mr-2 flex-shrink-0">•</span>
                     <span className="break-words">{skill}</span>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           )}
 
           {/* Work Experience */}
           {workExperience.length > 0 && (
-            <div className="mb-6 break-inside-avoid">
+            <div className="mb-4">
               <h2 className="text-lg font-bold text-gray-900 mb-3 tracking-wide" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 WORK EXPERIENCE
               </h2>
@@ -210,7 +210,7 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
 
           {/* Projects */}
           {projects.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-4">
               <h2
                 className="text-lg font-bold text-gray-900 mb-3 tracking-wide"
                 style={{ fontFamily: "'Montserrat', sans-serif" }}
@@ -257,7 +257,7 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
 
           {/* Certifications */}
           {data.certifications && data.certifications.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-4">
               <h2
                 className="text-lg font-bold text-gray-900 mb-3 tracking-wide"
                 style={{ fontFamily: "'Montserrat', sans-serif" }}
@@ -266,19 +266,14 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
               </h2>
               <div className="space-y-3">
                 {data.certifications.map((cert) => (
-                  <div key={cert.id} className="break-inside-avoid">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-bold text-sm text-gray-900 break-words">
-                          {cert.name}
-                        </h3>
-                        <p className="text-sm text-gray-700">
-                          {cert.issuer}
-                        </p>
-                      </div>
-                      <span className="text-sm text-gray-700 font-medium whitespace-nowrap ml-4">
-                        {cert.year}
-                      </span>
+                  <div className="break-inside-avoid">
+                    <div>
+                      <h3 className="font-bold text-sm text-gray-900 break-words">
+                        {cert.name}
+                      </h3>
+                      <p className="text-sm text-gray-700">
+                        {cert.issuer} - {cert.year}
+                      </p>
                     </div>
                     {cert.link && (
                       <a
@@ -300,6 +295,12 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
         <style>
           {`
             @media print {
+              @page {
+                margin-top: 130px;
+              }
+              @page :first {
+                margin-top: 0 !important;
+              }
               .break-inside-avoid {
                 break-inside: avoid;
               }

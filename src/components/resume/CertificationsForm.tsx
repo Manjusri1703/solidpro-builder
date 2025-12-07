@@ -123,9 +123,13 @@ export function CertificationsForm({ certifications, onChange }: CertificationsF
                                         <Input
                                             placeholder="2023"
                                             value={cert.year}
-                                            onChange={(e) =>
-                                                updateCertification(cert.id, "year", e.target.value)
-                                            }
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (value === "" || (/^\d+$/.test(value) && value.length <= 4)) {
+                                                    updateCertification(cert.id, "year", value);
+                                                }
+                                            }}
+                                            maxLength={4}
                                         />
                                     </FormField>
                                     <FormField label="Credential Link (Optional)">

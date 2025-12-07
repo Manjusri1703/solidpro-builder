@@ -72,34 +72,42 @@ export function ResumeForm() {
   const validateForm = (): boolean => {
     const { personalInfo, summary, skills, education } = resumeData;
 
-    if (!personalInfo.fullName.trim()) {
-      toast.error("Please enter your full name");
-      // setCurrentStep(0); // Removing this as we want to stay on current step and show errors
-      return false;
+    if (currentStep === 0) {
+      if (!personalInfo.fullName.trim()) {
+        toast.error("Please enter your full name");
+        return false;
+      }
+      if (!personalInfo.email.trim()) {
+        toast.error("Please enter your email");
+        return false;
+      }
+      if (!personalInfo.phone.trim()) {
+        toast.error("Please enter your phone number");
+        return false;
+      }
     }
-    if (!personalInfo.email.trim()) {
-      toast.error("Please enter your email");
-      return false;
+
+    if (currentStep === 1) {
+      if (!summary.trim()) {
+        toast.error("Please add a professional summary");
+        return false;
+      }
     }
-    if (!personalInfo.phone.trim()) {
-      toast.error("Please enter your phone number");
-      return false;
+
+    if (currentStep === 2) {
+      if (skills.length === 0) {
+        toast.error("Please add at least one skill");
+        return false;
+      }
     }
-    if (!summary.trim()) {
-      toast.error("Please add a professional summary");
-      setCurrentStep(1);
-      return false;
+
+    if (currentStep === 5) {
+      if (!education.degree.trim()) {
+        toast.error("Please add your education details");
+        return false;
+      }
     }
-    if (skills.length === 0) {
-      toast.error("Please add at least one skill");
-      setCurrentStep(2);
-      return false;
-    }
-    if (!education.degree.trim()) {
-      toast.error("Please add your education details");
-      setCurrentStep(5);
-      return false;
-    }
+
     return true;
   };
 
