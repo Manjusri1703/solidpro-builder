@@ -106,7 +106,7 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
         </div>
 
         {/* Content */}
-        <div className="px-10 pt-2 pb-6 relative" style={{ wordWrap: "break-word", overflowWrap: "break-word", zIndex: 2 }}>
+        <div className="px-10 pt-6 pb-6 relative" style={{ wordWrap: "break-word", overflowWrap: "break-word", zIndex: 2 }}>
           {/* Personal Info */}
           <div className="mb-4" style={{ maxWidth: "100%", paddingTop: "40px" }}>
             <h1 className="text-2xl font-bold text-gray-900 break-words" style={{ fontFamily: "'Montserrat', sans-serif" }}>
@@ -296,10 +296,10 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
           {`
             @media print {
               @page {
-                margin-top: 130px;
+                margin-top: 40px !important;
               }
               @page :first {
-                margin-top: 0 !important;
+            margin-top: 30px !important;
               }
               .break-inside-avoid {
                 break-inside: avoid;

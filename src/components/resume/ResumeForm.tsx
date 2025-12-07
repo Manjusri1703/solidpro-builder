@@ -111,7 +111,34 @@ export function ResumeForm() {
     return true;
   };
 
+  const validateFullForm = (): boolean => {
+    const { personalInfo, summary, skills, education } = resumeData;
+
+    if (!personalInfo.fullName.trim() || !personalInfo.email.trim() || !personalInfo.phone.trim()) {
+      toast.error("Please complete the Personal Information section.");
+      return false;
+    }
+    if (!summary.trim()) {
+      toast.error("Please add a Professional Summary.");
+      return false;
+    }
+    if (skills.length === 0) {
+      toast.error("Please add at least one Skill.");
+      return false;
+    }
+    if (!education.degree.trim()) {
+      toast.error("Please add your Education details.");
+      return false;
+    }
+
+    return true;
+  };
+
   const generatePdf = async () => {
+    if (!validateFullForm()) {
+      return;
+    }
+
     if (!previewRef.current) {
       toast.error("Preview is not ready.");
       return;

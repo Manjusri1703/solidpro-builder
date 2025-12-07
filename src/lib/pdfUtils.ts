@@ -109,7 +109,7 @@ export const generateResumePdf = async (options: PdfGeneratorOptions): Promise<v
 
   try {
     const pdfOptions: Omit<Html2PdfOptions, 'onclone'> = {
-      margin: [5, 10, 10, 10], // Reduced top margin since we overlay header
+      margin: [5, 10, 10, 10], // Increased top margin to clear the 120px header on all pages
       filename: filename.endsWith('.pdf') ? filename : `${filename}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
@@ -139,8 +139,6 @@ export const generateResumePdf = async (options: PdfGeneratorOptions): Promise<v
         if (content) {
           (content as HTMLElement).style.zIndex = '2';
           (content as HTMLElement).style.position = 'relative';
-          // Add top padding to account for the header we'll inject
-          (content as HTMLElement).style.paddingTop = '30px'; // Increased slightly for the new header
         }
       }
     };
@@ -159,10 +157,7 @@ export const generateResumePdf = async (options: PdfGeneratorOptions): Promise<v
         // 1. Add Header (Top of page)
         if (headerImage) {
           try {
-            // User requested exact match with live preview.
-            // Live preview: Container width = 595px. Header height = 120px.
-            // PDF: Page width = A4 (210mm).
-            // Proportional height = (120 / 595) * 210 ≈ 42.35mm
+
             const headerHeight = (120 / 595) * pageWidth;
             const headerWidth = headerHeight * headerImage.aspectRatio;
 
