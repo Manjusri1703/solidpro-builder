@@ -7,7 +7,7 @@
  * - Frontend/TypeScript: camelCase everywhere
  */
 
-import type { ResumeData, WorkExperience, Project, Education } from '@/types/resume';
+import type { ResumeData, WorkExperience, Project, Education, Certification } from '@/types/resume';
 import type { DbResumeRow, DbResumeInsert, DbWorkExperience, DbProject, DbEducation, Json } from '@/types/database';
 
 /**
@@ -31,6 +31,7 @@ export function dbToResume(row: DbResumeRow): ResumeData {
       institution: '',
       graduationYear: '',
     }),
+    certifications: parseJsonbArray<Certification>(row.certifications),
     selectedSvg: 'solidpro',
   };
 }
@@ -56,6 +57,9 @@ export function resumeToDb(resume: ResumeData): DbResumeInsert {
       : null,
     education: resume.education?.degree || resume.education?.institution
       ? resume.education as unknown as Json
+      : null,
+    certifications: resume.certifications?.length > 0
+      ? resume.certifications as unknown as Json
       : null,
   };
 }

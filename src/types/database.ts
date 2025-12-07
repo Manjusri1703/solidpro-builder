@@ -27,6 +27,14 @@ export interface DbEducation {
   graduationYear: string;
 }
 
+export interface DbCertification {
+  id: string;
+  name: string;
+  issuer: string;
+  year: string;
+  link?: string;
+}
+
 // Database row type (snake_case column names)
 export interface DbResumeRow {
   id: string;
@@ -42,6 +50,7 @@ export interface DbResumeRow {
   work_experience: DbWorkExperience[] | null;
   projects: DbProject[] | null;
   education: DbEducation | null;
+  certifications: DbCertification[] | null;
 }
 
 // Insert payload type (what we send to Supabase)
@@ -56,6 +65,7 @@ export interface DbResumeInsert {
   work_experience?: Json | null;  // Changed from DbWorkExperience[]
   projects?: Json | null;         // Changed from DbProject[]
   education?: Json | null;        // Changed from DbEducation
+  certifications?: Json | null;   // Array of DbCertification
   created_at?: string;
   updated_at?: string;
 }
@@ -72,4 +82,5 @@ export interface DbResumeUpdate {
   work_experience?: DbWorkExperience[] | null;
   projects?: DbProject[] | null;
   education?: DbEducation | null;
+  certifications?: DbCertification[] | null;
 }

@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS public.resumes (
     skills TEXT[],
     work_experience JSONB,
     projects JSONB,
-    education JSONB
+    education JSONB,
+    certifications JSONB
 );
 
 -- Create index on email for faster lookups
@@ -57,3 +58,4 @@ COMMENT ON COLUMN public.resumes.skills IS 'Array of skill strings';
 COMMENT ON COLUMN public.resumes.work_experience IS 'JSONB array of work experience objects';
 COMMENT ON COLUMN public.resumes.projects IS 'JSONB array of project objects';
 COMMENT ON COLUMN public.resumes.education IS 'JSONB object containing education details';
+COMMENT ON COLUMN public.resumes.certifications IS 'JSONB array of certification objects';
