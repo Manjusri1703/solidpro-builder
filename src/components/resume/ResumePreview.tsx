@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { ResumeData } from "@/types/resume";
-import { Check } from "lucide-react";
+
 
 interface ResumePreviewProps {
   data: ResumeData;
@@ -162,10 +162,8 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
               </h2>
               <div className="space-y-1.5">
                 {skills.map((skill, index) => (
-                  <div key={index} className="flex items-start gap-2 text-sm text-gray-700">
-                    <div className="w-4 h-4 border border-gray-400 rounded-sm flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-gray-600" />
-                    </div>
+                  <div key={index} className="text-sm text-gray-700 flex break-inside-avoid">
+                    <span className="mr-2 flex-shrink-0">•</span>
                     <span className="break-words">{skill}</span>
                   </div>
                 ))}
@@ -238,10 +236,11 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
                         Description:
                       </p>
 
-                      <ul className="list-disc ml-5 text-sm text-gray-700">
+                      <ul className="mt-1 space-y-1">
                         {descriptionPoints.map((point, index) => (
-                          <li key={index} className="break-words">
-                            {point}
+                          <li key={index} className="text-sm text-gray-700 flex break-inside-avoid">
+                            <span className="mr-2 flex-shrink-0">•</span>
+                            <span className="break-words">{point}</span>
                           </li>
                         ))}
                       </ul>

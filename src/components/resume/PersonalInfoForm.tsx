@@ -14,15 +14,20 @@ interface PersonalInfo {
 interface PersonalInfoFormProps {
   data: PersonalInfo;
   onChange: (data: PersonalInfo) => void;
+  showErrors?: boolean;
 }
 
 // Better global phone regex (international + formatting allowed)
 const PHONE_REGEX =
   /^(\+?\d{1,3}[-\s]?)?(\(?\d{2,4}\)?[-\s]?)?[\d\s\-]{6,12}$/;
 
-export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormProps) {
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export default function PersonalInfoForm({ data, onChange, showErrors = false }: PersonalInfoFormProps) {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [phoneTouched, setPhoneTouched] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailTouched, setEmailTouched] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
@@ -53,7 +58,24 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
     setToastVisible(false);
   };
 
+  const validateEmail = (email: string) => {
+    if (!email) {
+      setEmailError("Email is required");
+      return false;
+    }
+    if (!EMAIL_REGEX.test(email)) {
+      setEmailError("Please enter a valid email address");
+      return false;
+    }
+    setEmailError(null);
+    return true;
+  };
+
   const handleChange = (field: keyof PersonalInfo, value: string) => {
+    if (field === "fullName" && value.length > 50) return;
+    if (field === "phone" && value.length > 14) return;
+    if (field === "location" && value.length > 25) return;
+
     const newData = { ...data, [field]: value };
     onChange(newData);
 
@@ -69,6 +91,10 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
         setPhoneError(null);
       }
     }
+
+    if (field === "email" && emailTouched) {
+      validateEmail(value);
+    }
   };
 
   const handleBlur = (field: keyof PersonalInfo, value: string) => {
@@ -80,6 +106,10 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
       if (!valid && !toastVisible) {
         showToast(phoneError || "Invalid Phone Number");
       }
+    }
+    if (field === "email") {
+      setEmailTouched(true);
+      validateEmail(value);
     }
   };
 
@@ -120,7 +150,7 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
                 placeholder="John Doe"
                 value={data.fullName}
                 onChange={(e) => handleChange("fullName", e.target.value)}
-                className="pl-10"
+                className={`pl-10 ${showErrors && !data.fullName.trim() ? "border-red-500 focus:ring-red-500" : ""}`}
               />
             </div>
           </div>
@@ -132,16 +162,22 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
               <Label htmlFor="email" className="text-sm font-medium">
                 Email <span className="text-red-500">*</span>
               </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="john@example.com"
-                  value={data.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                  className="pl-10"
-                />
+              <div>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    value={data.email}
+                    onChange={(e) => handleChange("email", e.target.value)}
+                    onBlur={(e) => handleBlur("email", e.target.value)}
+                    className={`pl-10 ${(emailTouched && emailError) || (showErrors && (!data.email.trim() || emailError)) ? "border-red-500 focus:ring-red-500" : ""}`}
+                  />
+                </div>
+                {((emailTouched && emailError) || (showErrors && emailError)) && (
+                  <p className="text-sm text-red-500 mt-1">{emailError}</p>
+                )}
               </div>
             </div>
 
@@ -160,11 +196,11 @@ export default function PersonalInfoForm({ data, onChange }: PersonalInfoFormPro
                     value={data.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
                     onBlur={(e) => handleBlur("phone", e.target.value)}
-                    className={`pl-10 ${phoneTouched && phoneError ? "border-red-500 focus:ring-red-500" : ""
+                    className={`pl-10 ${(phoneTouched && phoneError) || (showErrors && (!data.phone.trim() || phoneError)) ? "border-red-500 focus:ring-red-500" : ""
                       }`}
                   />
                 </div>
-                {phoneTouched && phoneError && (
+                {((phoneTouched && phoneError) || (showErrors && phoneError)) && (
                   <p className="text-sm text-red-500 mt-1">{phoneError}</p>
                 )}
               </div>

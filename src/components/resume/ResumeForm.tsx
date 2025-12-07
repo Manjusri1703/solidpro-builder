@@ -16,29 +16,28 @@ import { generateResumePdf } from "@/lib/pdfUtils";
 import { saveResume } from "@/integrations/supabase/resumeService";
 
 const steps = [
-  { id: 1, title: "Personal", icon: <User className="w-5 h-5" /> },
-  { id: 2, title: "Summary", icon: <FileText className="w-5 h-5" /> },
-  { id: 3, title: "Skills", icon: <Wrench className="w-5 h-5" /> },
-  { id: 4, title: "Experience", icon: <Briefcase className="w-5 h-5" /> },
-  { id: 5, title: "Projects", icon: <FolderCode className="w-5 h-5" /> },
-  { id: 6, title: "Education", icon: <GraduationCap className="w-5 h-5" /> },
-  { id: 7, title: "Certifications", icon: <Award className="w-5 h-5" /> },
+  { id: 1, title: "Personal", icon: <User className="w-4 h-4 sm:w-5 sm:h-5" /> },
+  { id: 2, title: "Summary", icon: <FileText className="w-4 h-4 sm:w-5 sm:h-5" /> },
+  { id: 3, title: "Skills", icon: <Wrench className="w-4 h-4 sm:w-5 sm:h-5" /> },
+  { id: 4, title: "Experience", icon: <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" /> },
+  { id: 5, title: "Projects", icon: <FolderCode className="w-4 h-4 sm:w-5 sm:h-5" /> },
+  { id: 6, title: "Education", icon: <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" /> },
+  { id: 7, title: "Certifications", icon: <Award className="w-4 h-4 sm:w-5 sm:h-5" /> },
 ];
 
 export function ResumeForm() {
-  const [currentStep, setCurrentStep] = useState(0);
   const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
-  const [showPreview, setShowPreview] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
-
 
   const handleSaveResume = async () => {
     setIsSaving(true);
     try {
-      // Save to Supabase
       const success = await saveResume(resumeData);
       if (success) {
         toast.success('Resume saved successfully to database');
@@ -54,8 +53,13 @@ export function ResumeForm() {
   };
 
   const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+    if (validateForm()) {
+      setShowValidationErrors(false);
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+      }
+    } else {
+      setShowValidationErrors(true);
     }
   };
 
@@ -70,17 +74,15 @@ export function ResumeForm() {
 
     if (!personalInfo.fullName.trim()) {
       toast.error("Please enter your full name");
-      setCurrentStep(0);
+      // setCurrentStep(0); // Removing this as we want to stay on current step and show errors
       return false;
     }
     if (!personalInfo.email.trim()) {
       toast.error("Please enter your email");
-      setCurrentStep(0);
       return false;
     }
     if (!personalInfo.phone.trim()) {
       toast.error("Please enter your phone number");
-      setCurrentStep(0);
       return false;
     }
     if (!summary.trim()) {
@@ -137,6 +139,7 @@ export function ResumeForm() {
             onChange={(data) =>
               setResumeData({ ...resumeData, personalInfo: data })
             }
+            showErrors={showValidationErrors}
           />
         );
       case 1:
@@ -252,7 +255,7 @@ export function ResumeForm() {
             {renderCurrentStep()}
 
             {/* Navigation */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
+            <div className="flex items-center justify-between mt-8 pt-6 border-border">
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   variant="outline"
