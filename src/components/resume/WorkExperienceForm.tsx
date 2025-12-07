@@ -92,7 +92,7 @@ export function WorkExperienceForm({ experiences, onChange }: WorkExperienceForm
                     e.stopPropagation();
                     removeExperience(exp.id);
                   }}
-                  className="text-muted-foreground hover:text-destructive"
+                  className="text-muted-foreground hover:bg-red-500 hover:text-white"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

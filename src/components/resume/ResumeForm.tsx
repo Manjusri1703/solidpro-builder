@@ -6,11 +6,12 @@ import { SkillsForm } from "./SkillsForm";
 import { WorkExperienceForm } from "./WorkExperienceForm";
 import { ProjectsForm } from "./ProjectsForm";
 import { EducationForm } from "./EducationForm";
+import { CertificationsForm } from "./CertificationsForm";
 import { ResumePreview } from "./ResumePreview";
 import { StepIndicator } from "./StepIndicator";
 import { ResumeData, initialResumeData } from "@/types/resume";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Briefcase, Download, Eye, EyeOff, FileText, FolderCode, GraduationCap, Loader2, Save, User, Wrench } from "lucide-react";
+import { ArrowLeft, ArrowRight, Briefcase, Download, Eye, EyeOff, FileText, FolderCode, GraduationCap, Loader2, Save, User, Wrench, Award } from "lucide-react";
 import { generateResumePdf } from "@/lib/pdfUtils";
 import { saveResume } from "@/integrations/supabase/resumeService";
 
@@ -21,6 +22,7 @@ const steps = [
   { id: 4, title: "Experience", icon: <Briefcase className="w-5 h-5" /> },
   { id: 5, title: "Projects", icon: <FolderCode className="w-5 h-5" /> },
   { id: 6, title: "Education", icon: <GraduationCap className="w-5 h-5" /> },
+  { id: 7, title: "Certifications", icon: <Award className="w-5 h-5" /> },
 ];
 
 export function ResumeForm() {
@@ -172,6 +174,13 @@ export function ResumeForm() {
           <EducationForm
             data={resumeData.education}
             onChange={(education) => setResumeData({ ...resumeData, education })}
+          />
+        );
+      case 6:
+        return (
+          <CertificationsForm
+            certifications={resumeData.certifications}
+            onChange={(certifications) => setResumeData({ ...resumeData, certifications })}
           />
         );
       default:

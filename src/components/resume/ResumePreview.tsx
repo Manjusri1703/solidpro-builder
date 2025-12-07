@@ -255,8 +255,49 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
               </div>
             </div>
           )}
-        </div>
 
+          {/* Certifications */}
+          {data.certifications && data.certifications.length > 0 && (
+            <div className="mb-6">
+              <h2
+                className="text-lg font-bold text-gray-900 mb-3 tracking-wide"
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
+              >
+                CERTIFICATIONS
+              </h2>
+              <div className="space-y-3">
+                {data.certifications.map((cert) => (
+                  <div key={cert.id} className="break-inside-avoid">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-bold text-sm text-gray-900 break-words">
+                          {cert.name}
+                        </h3>
+                        <p className="text-sm text-gray-700">
+                          {cert.issuer}
+                        </p>
+                      </div>
+                      <span className="text-sm text-gray-700 font-medium whitespace-nowrap ml-4">
+                        {cert.year}
+                      </span>
+                    </div>
+                    {cert.link && (
+                      <a
+                        href={cert.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:text-blue-800 break-all block mt-1"
+                      >
+                        View Credential
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
         <style>
           {`
             @media print {

@@ -39,7 +39,7 @@ export function ProjectsForm({ projects, onChange }: ProjectsFormProps) {
   const [techInputs, setTechInputs] = useState<Record<string, string>>({});
 
   const handleTechKeyDown = (e: KeyboardEvent<HTMLInputElement>, projectId: string) => {
-    if ( e.key === ',') {
+    if (e.key === ',') {
       e.preventDefault();
       const tech = techInputs[projectId]?.trim();
       if (tech) {
@@ -118,7 +118,7 @@ export function ProjectsForm({ projects, onChange }: ProjectsFormProps) {
                     e.stopPropagation();
                     removeProject(project.id);
                   }}
-                  className="text-muted-foreground hover:text-destructive"
+                  className="text-muted-foreground hover:bg-red-500 hover:text-white"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -185,7 +185,7 @@ export function ProjectsForm({ projects, onChange }: ProjectsFormProps) {
                       className="flex-1 min-w-[100px] bg-transparent border-0 focus:outline-none focus:ring-0 px-1"
                     />
                   </div>
-                  
+
                 </FormField>
               </div>
             )}
@@ -194,7 +194,7 @@ export function ProjectsForm({ projects, onChange }: ProjectsFormProps) {
 
         <Button
           type="button"
-          variant="outline-primary"
+          variant="outline-secondary"
           onClick={addProject}
           className="w-full"
         >
