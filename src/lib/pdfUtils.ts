@@ -28,8 +28,16 @@ export interface PdfGeneratorOptions {
   logoUrl?: string;
 }
 
-// Convert image URL to base64
-const loadImageAsBase64 = async (url: string): Promise<string> => {
+// Image data interface
+interface ImageData {
+  dataUrl: string;
+  width: number;
+  height: number;
+  aspectRatio: number;
+}
+
+// Convert image URL to base64 with optional opacity
+const loadImageAsBase64 = async (url: string, opacity: number = 1.0): Promise<ImageData> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -39,8 +47,14 @@ const loadImageAsBase64 = async (url: string): Promise<string> => {
       canvas.height = img.height;
       const ctx = canvas.getContext("2d");
       if (ctx) {
+        ctx.globalAlpha = opacity;
         ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL("image/png"));
+        resolve({
+          dataUrl: canvas.toDataURL("image/png"),
+          width: img.width,
+          height: img.height,
+          aspectRatio: img.width / img.height
+        });
       } else {
         reject(new Error("Failed to get canvas context"));
       }
@@ -55,33 +69,55 @@ const loadImageAsBase64 = async (url: string): Promise<string> => {
 export const generateResumePdf = async (options: PdfGeneratorOptions): Promise<void> => {
   const { element, filename } = options;
 
-  // Load watermark
+  // Header SVG Base64 (Updated to match user request)
+  // ViewBox: 0 0 227 183
+  const headerSvgBase64 = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjI3IiBoZWlnaHQ9IjE4MyIgdmlld0JveD0iMCAwIDIyNyAxODMiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTE2Ny40NTkgMEgwVjE0MS4zNDdDNi4yMzg5IDQxLjIyNjMgMTE0LjE2OCA0LjY3NTE2IDE2Ny40NTkgMFoiIGZpbGw9IiMxNjQ2OUQiIC8+CiAgPHBhdGggZD0iTTIyNyAwQzU4LjgxMzYgNy44MTQ3NSA2LjQ0ODg2IDEyNC4wOTUgMCAxODEuMjU5VjE1Ny4zOFYxMzIuNDE3QzE4LjA1NjggMzMuNjQ2OSAxMTMuNSAzLjI1NjE1IDE1OS45MzIgMEgyMjdaIiBmaWxsPSIjRUQxQjJGIiAvPgo8L3N2Zz4=";
+
+  // Load watermark and header images
   const watermarkUrl = "/solidpro.svg";
-  let watermarkBase64: string | null = null;
+  let watermarkImage: ImageData | null = null;
+  let headerImage: ImageData | null = null;
 
   try {
-    watermarkBase64 = await loadImageAsBase64(watermarkUrl);
+    const results = await Promise.all([
+      loadImageAsBase64(watermarkUrl, 0.05).catch(e => {
+        console.warn("Could not load watermark image:", e);
+        return null;
+      }),
+      loadImageAsBase64(headerSvgBase64).catch(e => {
+        console.warn("Could not load header image:", e);
+        return null;
+      })
+    ]);
+    watermarkImage = results[0];
+    headerImage = results[1];
   } catch (e) {
-    console.warn("Could not load watermark image:", e);
+    console.warn("Error loading images:", e);
   }
 
-  // Create a clone of the element to avoid modifying the original
+  // Create a clone of the element
   const elementClone = element.cloneNode(true) as HTMLElement;
   document.body.appendChild(elementClone);
 
-  try {
-    // We'll handle the watermark in the onclone callback to ensure it appears on all pages
+  // Pre-process the clone to remove elements we'll inject manually
+  // This ensures html2pdf doesn't render them, preventing duplicates
+  const watermarks = elementClone.querySelectorAll('.watermark-container');
+  watermarks.forEach(el => el.remove());
 
-    // Generate and save the PDF
+  const headers = elementClone.querySelectorAll('.svg-header-container');
+  headers.forEach(el => el.remove());
+
+  try {
     const pdfOptions: Omit<Html2PdfOptions, 'onclone'> = {
-      margin: [5, 10, 10, 10],
+      margin: [5, 10, 10, 10], // Reduced top margin since we overlay header
       filename: filename.endsWith('.pdf') ? filename : `${filename}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
         scale: 2,
         useCORS: true,
         logging: true,
-        letterRendering: true
+        letterRendering: true,
+        allowTaint: true
       },
       jsPDF: {
         unit: 'mm',
@@ -94,52 +130,71 @@ export const generateResumePdf = async (options: PdfGeneratorOptions): Promise<v
         after: '.page-break-after'
       }
     };
+
     const options: Html2PdfOptions = {
       ...pdfOptions,
-      // In the onclone callback of html2pdf
       onclone: (document: Document) => {
-        // Ensure the watermark is on all pages
-        if (watermarkBase64) {
-          const style = document.createElement('style');
-          style.textContent = `
-      .watermark {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-image: url(${watermarkBase64});
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: 40% auto;
-        opacity: 0.05;
-        pointer-events: none;
-        z-index: -1;
+        // Ensure proper z-index for content
+        const content = document.querySelector('.resume-document');
+        if (content) {
+          (content as HTMLElement).style.zIndex = '2';
+          (content as HTMLElement).style.position = 'relative';
+          // Add top padding to account for the header we'll inject
+          (content as HTMLElement).style.paddingTop = '30px'; // Increased slightly for the new header
+        }
       }
-    `;
-          document.head.appendChild(style);
+    };
 
-          const watermarks = document.querySelectorAll('.watermark');
-          if (watermarks.length === 0) {
-            const watermark = document.createElement('div');
-            watermark.className = 'watermark';
-            document.body.insertBefore(watermark, document.body.firstChild);
+    // Use .toPdf() to get access to the jsPDF instance
+    const worker = html2pdf().set(options as any).from(elementClone).toPdf();
+
+    await worker.get('pdf').then((pdf: any) => {
+      const totalPages = pdf.internal.getNumberOfPages();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+
+        // 1. Add Header (Top of page) - Using PNG version for better compatibility
+        if (headerImage) {
+          try {
+            // Calculate height based on aspect ratio
+            // We want it to span the full width
+            const headerHeight = pageWidth / headerImage.aspectRatio;
+
+            // Limit max height to avoid taking up too much space (e.g. max 40mm)
+            // But for this design, we might want to respect the ratio fully if possible, 
+            // or crop. The user said height="120px" in web, which is roughly 32mm.
+            // Let's stick closer to the aspect ratio but cap it if it gets huge.
+            const displayHeight = Math.min(headerHeight, 40);
+
+            pdf.addImage(headerImage.dataUrl, 'PNG', 0, 0, pageWidth, displayHeight);
+          } catch (err) {
+            console.error("Failed to add header to PDF page " + i, err);
           }
         }
 
-        // Ensure the SVG header is visible
-        const svgs = document.querySelectorAll('svg');
-        svgs.forEach(svg => {
-          svg.style.position = 'relative';
-          svg.style.zIndex = '10';
-        });
-      }
-    }
+        // 2. Add Watermark (Centered full page)
+        if (watermarkImage) {
+          try {
+            // CSS Requirement: width: 60%, top: 50%, left: 50%, transform: translate(-50%, -50%)
+            // calculated relative to page width
+            const wmDisplayWidth = pageWidth * 0.6; // 60% of page width
+            const wmDisplayHeight = wmDisplayWidth / watermarkImage.aspectRatio;
 
-    await html2pdf()
-      .set(options as any)
-      .from(elementClone)
-      .save(filename);
+            const x = (pageWidth - wmDisplayWidth) / 2;
+            const y = (pageHeight - wmDisplayHeight) / 2;
+
+            pdf.addImage(watermarkImage.dataUrl, 'PNG', x, y, wmDisplayWidth, wmDisplayHeight);
+          } catch (err) {
+            console.error("Failed to add watermark to PDF page " + i, err);
+          }
+        }
+      }
+    }).then(() => {
+      worker.save(filename);
+    });
 
   } catch (error) {
     console.error("Error generating PDF:", error);

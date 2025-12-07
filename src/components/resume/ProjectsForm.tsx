@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, KeyboardEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { FormSection } from "./FormSection";
 import { FormField } from "./FormField";
 import { Project } from "@/types/resume";
-import { Plus, Trash2, FolderCode, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Trash2, FolderCode, ChevronDown, ChevronUp, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ProjectsFormProps {
   projects: Project[];
@@ -35,9 +36,36 @@ export function ProjectsForm({ projects, onChange }: ProjectsFormProps) {
     );
   };
 
-  const updateTechnologies = (id: string, techString: string) => {
-    const technologies = techString.split(',').map(tech => tech.trim()).filter(tech => tech.length > 0);
-    updateProject(id, 'technologies', technologies);
+  const [techInputs, setTechInputs] = useState<Record<string, string>>({});
+
+  const handleTechKeyDown = (e: KeyboardEvent<HTMLInputElement>, projectId: string) => {
+    if ( e.key === ',') {
+      e.preventDefault();
+      const tech = techInputs[projectId]?.trim();
+      if (tech) {
+        const currentTechs = projects.find(p => p.id === projectId)?.technologies || [];
+        if (!currentTechs.includes(tech)) {
+          updateProject(projectId, 'technologies', [...currentTechs, tech]);
+        }
+        setTechInputs(prev => ({ ...prev, [projectId]: '' }));
+      }
+    } else if (e.key === 'Backspace' && !techInputs[projectId]) {
+      // Remove last technology on backspace when input is empty
+      const currentTechs = [...(projects.find(p => p.id === projectId)?.technologies || [])];
+      if (currentTechs.length > 0) {
+        currentTechs.pop();
+        updateProject(projectId, 'technologies', currentTechs);
+      }
+    }
+  };
+
+  const removeTechnology = (projectId: string, techToRemove: string) => {
+    const currentTechs = projects.find(p => p.id === projectId)?.technologies || [];
+    updateProject(projectId, 'technologies', currentTechs.filter(t => t !== techToRemove));
+  };
+
+  const handleTechInputChange = (projectId: string, value: string) => {
+    setTechInputs(prev => ({ ...prev, [projectId]: value }));
   };
 
   const removeProject = (id: string) => {
@@ -124,13 +152,40 @@ export function ProjectsForm({ projects, onChange }: ProjectsFormProps) {
                   />
                 </FormField>
                 <FormField label="Technologies Used" required>
-                  <Input
-                    id={`technologies-${project.id}`}
-                    placeholder="e.g., React, Node.js, MongoDB (comma separated)"
-                    value={project.technologies.join(', ')}
-                    onChange={(e) => updateTechnologies(project.id, e.target.value)}
-                    className="bg-background"
-                  />
+                  <div className="flex flex-wrap gap-2 min-h-10 p-2 border rounded-md bg-background">
+                    {project.technologies.map((tech) => (
+                      <div key={`${project.id}-${tech}`} className="flex items-center gap-1 px-2 py-1 text-sm rounded-full bg-primary/10 text-primary">
+                        {tech}
+                        <button
+                          type="button"
+                          onClick={() => removeTechnology(project.id, tech)}
+                          className="text-muted-foreground hover:text-foreground focus:outline-none"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    <input
+                      type="text"
+                      id={`technologies-${project.id}`}
+                      placeholder={project.technologies.length === 0 ? "e.g., React, Node.js, MongoDB (Press Enter or comma to add)" : ""}
+                      value={techInputs[project.id] || ''}
+                      onChange={(e) => handleTechInputChange(project.id, e.target.value)}
+                      onKeyDown={(e) => handleTechKeyDown(e, project.id)}
+                      onBlur={() => {
+                        const tech = techInputs[project.id]?.trim();
+                        if (tech) {
+                          const currentTechs = projects.find(p => p.id === project.id)?.technologies || [];
+                          if (!currentTechs.includes(tech)) {
+                            updateProject(project.id, 'technologies', [...currentTechs, tech]);
+                          }
+                          setTechInputs(prev => ({ ...prev, [project.id]: '' }));
+                        }
+                      }}
+                      className="flex-1 min-w-[100px] bg-transparent border-0 focus:outline-none focus:ring-0 px-1"
+                    />
+                  </div>
+                  
                 </FormField>
               </div>
             )}

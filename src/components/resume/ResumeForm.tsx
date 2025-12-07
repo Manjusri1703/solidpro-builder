@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PersonalInfoForm } from "./PersonalInfoForm";
+import PersonalInfoForm from "./PersonalInfoForm";
 import { SummaryForm } from "./SummaryForm";
 import { SkillsForm } from "./SkillsForm";
 import { WorkExperienceForm } from "./WorkExperienceForm";
@@ -15,38 +15,27 @@ import { generateResumePdf } from "@/lib/pdfUtils";
 import { saveResume } from "@/integrations/supabase/resumeService";
 
 const steps = [
-    { id: 1, title: "Personal", icon: <User className="w-5 h-5" /> },
-    { id: 2, title: "Summary", icon: <FileText className="w-5 h-5" /> },
-    { id: 3, title: "Skills", icon: <Wrench className="w-5 h-5" /> },
+  { id: 1, title: "Personal", icon: <User className="w-5 h-5" /> },
+  { id: 2, title: "Summary", icon: <FileText className="w-5 h-5" /> },
+  { id: 3, title: "Skills", icon: <Wrench className="w-5 h-5" /> },
   { id: 4, title: "Experience", icon: <Briefcase className="w-5 h-5" /> },
-    { id: 5, title: "Projects", icon: <FolderCode className="w-5 h-5" /> },
-    { id: 6, title: "Education", icon: <GraduationCap className="w-5 h-5" /> },
+  { id: 5, title: "Projects", icon: <FolderCode className="w-5 h-5" /> },
+  { id: 6, title: "Education", icon: <GraduationCap className="w-5 h-5" /> },
 ];
 
 export function ResumeForm() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [resumeData, setResumeData] = useState<ResumeData>(() => {
-    // Load from localStorage on initial render
-    const saved = localStorage.getItem('resumeData');
-    return saved ? JSON.parse(saved) : initialResumeData;
-  });
+  const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
   const [showPreview, setShowPreview] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
-  // Save to localStorage whenever resumeData changes
-  useEffect(() => {
-    localStorage.setItem('resumeData', JSON.stringify(resumeData));
-  }, [resumeData]);
 
   const handleSaveResume = async () => {
     setIsSaving(true);
     try {
-      // Save to localStorage
-      localStorage.setItem('resumeData', JSON.stringify(resumeData));
-      
       // Save to Supabase
       const success = await saveResume(resumeData);
       if (success) {
@@ -76,7 +65,7 @@ export function ResumeForm() {
 
   const validateForm = (): boolean => {
     const { personalInfo, summary, skills, education } = resumeData;
-    
+
     if (!personalInfo.fullName.trim()) {
       toast.error("Please enter your full name");
       setCurrentStep(0);
@@ -110,33 +99,33 @@ export function ResumeForm() {
     return true;
   };
 
-const generatePdf = async () => {
-  if (!previewRef.current) {
-    toast.error("Preview is not ready.");
-    return;
-  }
+  const generatePdf = async () => {
+    if (!previewRef.current) {
+      toast.error("Preview is not ready.");
+      return;
+    }
 
-  setIsGenerating(true);
-  const loadingToast = toast.loading("Generating PDF...");
+    setIsGenerating(true);
+    const loadingToast = toast.loading("Generating PDF...");
 
-  try {
-    const element = previewRef.current;
-    const filename = `${resumeData.personalInfo.fullName || 'Resume'}_Resume.pdf`;
-    
-    await generateResumePdf({
-      element,
-      filename,
-    });
+    try {
+      const element = previewRef.current;
+      const filename = `${resumeData.personalInfo.fullName || 'Resume'}_Resume.pdf`;
 
-    toast.success("PDF generated successfully!");
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to generate PDF.");
-  } finally {
-    toast.dismiss(loadingToast);
-    setIsGenerating(false);
-  }
-};
+      await generateResumePdf({
+        element,
+        filename,
+      });
+
+      toast.success("PDF generated successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to generate PDF.");
+    } finally {
+      toast.dismiss(loadingToast);
+      setIsGenerating(false);
+    }
+  };
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 0:
@@ -275,24 +264,26 @@ const generatePdf = async () => {
                 </Button>
               </div>
               <div className="flex gap-4">
-                <Button
-                  variant="outline"
-                  onClick={handleSaveResume}
-                  disabled={isSaving || isLoading}
-                  className="flex items-center gap-2"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Resume
-                    </>
-                  )}
-                </Button>
+                {currentStep === steps.length - 1 && (
+                  <Button
+                    variant="outline"
+                    onClick={handleSaveResume}
+                    disabled={isSaving || isLoading}
+                    className="flex items-center gap-2"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Resume
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

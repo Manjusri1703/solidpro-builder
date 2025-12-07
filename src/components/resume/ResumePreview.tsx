@@ -29,35 +29,80 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
             left: '50%',
             transform: 'translate(-50%, -50%)',
             zIndex: 0,
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
           }}
         >
           <img
             src="/solidpro.svg"
             alt="SOLiDPRO Watermark"
             style={{
-              width: '200px',
-              objectFit: 'contain',
-              opacity: 0.05
+              width: '60%',
+              height: 'auto',
+              maxWidth: '400px',
+              opacity: 0.05,
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 0
             }}
           />
         </div>
 
-        {/* SVG Header - Fixed position to appear on all pages */}
+        {/* SVG Header - Appears at the top of the first page */}
         <div
           className="svg-header-container"
           style={{
-            position: 'fixed',
+            position: 'absolute',
             top: 0,
             left: 0,
             zIndex: 1,
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            width: '100%',
+            height: '120px',
+            overflow: 'hidden'
           }}
         >
-          <svg width="227" height="183" viewBox="0 0 227 183" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M167.459 0H0V141.347C6.2389 41.2263 114.168 4.67516 167.459 0Z" fill="#16469D"></path>
-            <path d="M227 0C58.8136 7.81475 6.44886 124.095 0 181.259V157.38V132.417C18.0568 33.6469 113.5 3.25615 159.932 0H227Z" fill="#ED1B2F"></path>
+          {/* SVG for Web View */}
+          <svg
+            className="web-svg"
+            width="100%"
+            height="120"
+            viewBox="0 0 227 183"
+            fill="none"
+            preserveAspectRatio="xMinYMin meet"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '120px'
+            }}
+          >
+            <path d="M167.459 0H0V141.347C6.2389 41.2263 114.168 4.67516 167.459 0Z" fill="#16469D" />
+            <path d="M227 0C58.8136 7.81475 6.44886 124.095 0 181.259V157.38V132.417C18.0568 33.6469 113.5 3.25615 159.932 0H227Z" fill="#ED1B2F" />
           </svg>
+
+          {/* SVG for PDF - Using data URL for better PDF compatibility */}
+          <img
+            className="pdf-svg"
+            src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMjAiIHZpZXdCb3g9IjAgMCAyMjcgMTIwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxwYXRoIGQ9Ik0wLDBIMjI3VjEyMEgwVjBaIiBmaWxsPSIjMTY0NjlEIi8+CiAgPHBhdGggZD0iTTIyNywwVjEyMEgwQzAsODAgNzUsMjAgMTgwLDBIMjI3WiIgZmlsbD0iI0VEMUIyRiIvPgo8L3N2Zz4="
+            alt=""
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '120px',
+              opacity: 0,
+              visibility: 'hidden'
+            }}
+          />
         </div>
 
         {/* Content */}
@@ -194,17 +239,60 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
                 break-inside: avoid-page;
               }
               
-              /* Ensure SVG header appears on all pages */
+              /* Ensure watermark appears on all pages */
+              .watermark-container {
+                position: absolute !important;
+                width: 100% !important;
+                height: 100% !important;
+                top: 0 !important;
+                left: 0 !important;
+                transform: none !important;
+              }
+              
+              .watermark-container img {
+                position: absolute !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                opacity: 0.05 !important;
+                z-index: 0 !important;
+                width: 60% !important;
+                max-width: 400px !important;
+              }
+              
+              /* SVG header styling for print */
               .svg-header-container {
-                position: fixed !important;
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 120px !important;
+                overflow: hidden !important;
+              }
+              
+              /* Hide web SVG in print */
+              .svg-header-container .web-svg {
+                display: none !important;
+              }
+              
+              /* Show PDF SVG in print */
+              .svg-header-container .pdf-svg {
+                opacity: 1 !important;
+                visibility: visible !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
               
               /* Ensure content has proper z-index */
               .resume-document > div {
                 position: relative;
                 z-index: 2;
+              }
+              
+              /* Ensure proper printing of background colors */
+              * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
             }
           `}
