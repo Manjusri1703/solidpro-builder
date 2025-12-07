@@ -156,20 +156,17 @@ export const generateResumePdf = async (options: PdfGeneratorOptions): Promise<v
       for (let i = 1; i <= totalPages; i++) {
         pdf.setPage(i);
 
-        // 1. Add Header (Top of page) - Using PNG version for better compatibility
+        // 1. Add Header (Top of page)
         if (headerImage) {
           try {
-            // Calculate height based on aspect ratio
-            // We want it to span the full width
-            const headerHeight = pageWidth / headerImage.aspectRatio;
+            // User requested exact match with live preview.
+            // Live preview: Container width = 595px. Header height = 120px.
+            // PDF: Page width = A4 (210mm).
+            // Proportional height = (120 / 595) * 210 ≈ 42.35mm
+            const headerHeight = (120 / 595) * pageWidth;
+            const headerWidth = headerHeight * headerImage.aspectRatio;
 
-            // Limit max height to avoid taking up too much space (e.g. max 40mm)
-            // But for this design, we might want to respect the ratio fully if possible, 
-            // or crop. The user said height="120px" in web, which is roughly 32mm.
-            // Let's stick closer to the aspect ratio but cap it if it gets huge.
-            const displayHeight = Math.min(headerHeight, 40);
-
-            pdf.addImage(headerImage.dataUrl, 'PNG', 0, 0, pageWidth, displayHeight);
+            pdf.addImage(headerImage.dataUrl, 'PNG', 0, 0, headerWidth, headerHeight);
           } catch (err) {
             console.error("Failed to add header to PDF page " + i, err);
           }
@@ -179,8 +176,7 @@ export const generateResumePdf = async (options: PdfGeneratorOptions): Promise<v
         if (watermarkImage) {
           try {
             // CSS Requirement: width: 60%, top: 50%, left: 50%, transform: translate(-50%, -50%)
-            // calculated relative to page width
-            const wmDisplayWidth = pageWidth * 0.6; // 60% of page width
+            const wmDisplayWidth = pageWidth * 0.6;
             const wmDisplayHeight = wmDisplayWidth / watermarkImage.aspectRatio;
 
             const x = (pageWidth - wmDisplayWidth) / 2;

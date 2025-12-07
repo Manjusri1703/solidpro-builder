@@ -148,7 +148,7 @@ export function WorkExperienceForm({ experiences, onChange }: WorkExperienceForm
                 </div>
                 <FormField label="Responsibilities (one per line)" required>
                   <Textarea
-                    placeholder="• Developed web applications using React&#10;• Implemented REST APIs&#10;• Collaborated with design team"
+                    placeholder="Developed web applications using React&#10;Implemented REST APIs&#10;Collaborated with design team"
                     value={exp.responsibilities.join("\n")}
                     onChange={(e) =>
                       handleResponsibilitiesChange(exp.id, e.target.value)

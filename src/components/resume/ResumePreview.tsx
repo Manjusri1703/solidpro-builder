@@ -188,13 +188,19 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
                     {exp.responsibilities.length > 0 && (
                       <ul className="mt-1 space-y-1">
                         {exp.responsibilities
-                          .filter(resp => resp.trim() !== '') // Filter out empty responsibilities
-                          .map((resp, idx) => (
-                            <li key={idx} className="text-sm text-gray-700 flex break-inside-avoid">
-                              <span className="mr-2 flex-shrink-0">•</span>
-                              <span className="break-words">{resp}</span>
-                            </li>
-                          ))
+                          .filter(resp => resp.trim() !== '')
+                          .map((resp, idx) => {
+                            const cleanResp = resp.replace(/^[\s•\-*–—◦▪⁃∙●➤➢➣]+/, '').trim();
+
+                            if (!cleanResp) return null;
+
+                            return (
+                              <li key={idx} className="text-sm text-gray-700 flex break-inside-avoid">
+                                <span className="mr-2 flex-shrink-0">•</span>
+                                <span className="break-words">{cleanResp}</span>
+                              </li>
+                            );
+                          })
                         }
                       </ul>
                     )}
@@ -207,23 +213,45 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
           {/* Projects */}
           {projects.length > 0 && (
             <div className="mb-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-3 tracking-wide" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              <h2
+                className="text-lg font-bold text-gray-900 mb-3 tracking-wide"
+                style={{ fontFamily: "'Montserrat', sans-serif" }}
+              >
                 PROJECTS
               </h2>
+
               <div className="space-y-4">
-                {projects.map((project) => (
-                  <div key={project.id} className="break-inside-avoid">
-                    <h3 className="font-bold text-sm text-gray-900 break-words">
-                      {project.name}
-                    </h3>
-                    <p className="text-sm text-gray-700 mt-1 break-words">
-                      <span className="font-medium">Description:</span> {project.description}
-                    </p>
-                    <p className="text-sm text-gray-700 break-words">
-                      <span className="font-medium">Tech Stack:</span> {project.technologies}
-                    </p>
-                  </div>
-                ))}
+                {projects.map((project) => {
+                  // Split description into bullet points
+                  const descriptionPoints = project.description
+                    ?.split(/[•\n-]+/)     // split by •, newline, or -
+                    .map(item => item.trim())
+                    .filter(Boolean);
+
+                  return (
+                    <div key={project.id} className="break-inside-avoid">
+                      <h3 className="font-bold text-sm text-gray-900 break-words">
+                        {project.name}
+                      </h3>
+
+                      <p className="text-sm text-gray-700 mt-1 font-medium">
+                        Description:
+                      </p>
+
+                      <ul className="list-disc ml-5 text-sm text-gray-700">
+                        {descriptionPoints.map((point, index) => (
+                          <li key={index} className="break-words">
+                            {point}
+                          </li>
+                        ))}
+                      </ul>
+
+                      <p className="text-sm text-gray-700 break-words">
+                        <span className="font-medium">Tech Stack:</span> {project.technologies}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
