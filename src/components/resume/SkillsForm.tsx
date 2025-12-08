@@ -37,22 +37,21 @@ export function SkillsForm({ skills, onChange }: SkillsFormProps) {
       description="Add your technical and professional skills"
     >
       <FormField label="Add Skills" required>
-        <div className="flex gap-2">
+        <div className="relative flex-1">
           <Input
             placeholder="e.g., JavaScript, Python, React..."
             value={newSkill}
             onChange={(e) => setNewSkill(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="flex-1"
+            className="pr-10"
           />
-          <Button
+          <button
             type="button"
             onClick={addSkill}
-            variant="secondary"
-            size="icon"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
-            <Plus className="h-4 w-4" />
-          </Button>
+            <Plus className="h-5 w-5" />
+          </button>
         </div>
       </FormField>
 

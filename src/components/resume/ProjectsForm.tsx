@@ -84,7 +84,7 @@ export function ProjectsForm({ projects, onChange }: ProjectsFormProps) {
   return (
     <FormSection
       title="Projects"
-      description="Showcase your notable projects and achievements"
+      description="Showcase your projects and achievements"
     >
       <div className="space-y-4">
         {projects.map((project, index) => (

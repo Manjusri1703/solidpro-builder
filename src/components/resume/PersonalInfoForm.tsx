@@ -133,7 +133,7 @@ export default function PersonalInfoForm({ data, onChange, showErrors = false }:
         <div className="space-y-1">
           <h2 className="text-2xl font-semibold tracking-tight">Personal Information</h2>
           <p className="text-sm text-gray-600">
-            Enter your contact details for the resume header
+            Enter your contact details
           </p>
         </div>
 
